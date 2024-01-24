@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pescar.ui.theme.RetroTestTheme
 import com.google.android.filament.Engine
 import com.google.ar.core.Anchor
@@ -74,20 +76,21 @@ private const val kMaxModelInstances = 1
 private var lakeNode: ModelNode? = null
 private var currentState = -1
 
-
+/*
 private val fishNames = listOf(
     "Arowana", "Betta", "Catfish", "Dolphin Fish", "Eel",
     "Flounder", "Guppy", "Haddock", "Ichthyosaur", "Jellyfish",
     "Koi", "Lionfish", "Mackerel", "Nemo", "Octopus", "Piranha",
     "Quillfish", "Rainbow Trout", "Salmon", "Tetra", "Uaru",
     "Viperfish", "Wrasse", "X-ray Tetra", "Yellowtail", "Zebra Danio", "Capybara"
-)
+)*/
 
 class MainActivity : ComponentActivity() {
 
     private var sensorManager: SensorManager? = null
     private var accelerometer: Sensor? = null
 
+    lateinit var retroViewModel: RetroViewModel
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -133,6 +136,8 @@ class MainActivity : ComponentActivity() {
                     LaunchedEffect(internalState){
 
                     }
+
+                    retroViewModel = viewModel()
 
                     ARScene(
                         modifier = Modifier.fillMaxSize(),
@@ -232,8 +237,10 @@ class MainActivity : ComponentActivity() {
                         },
                         onGestureListener = rememberOnGestureListener(
                             onSingleTapConfirmed = { motionEvent, node ->
+
                                 if(currentState == 2)
                                     currentState = 0
+
                                 if (node == null && childNodes.isEmpty()) {
                                     val hitResults =
                                         frame?.hitTest(motionEvent.x, motionEvent.y)
@@ -287,14 +294,26 @@ class MainActivity : ComponentActivity() {
                                 stringResource(R.string.point_your_phone_down)
                             }
                             0 -> {
-                                "Swing your phone forward to cast your fishing rod!"
+                                //"Swing your phone forward to cast your fishing rod!"
+                                stringResource(R.string.cast_fishing_rod)
                             }
                             1 -> {
-                                "Swing your phone backwards to catch the fish!"
+                                //"Swing your phone backwards to catch the fish!"
+                                stringResource(R.string.pull_fishing_rod)
                             }
                             else -> {
-                                var randomFish = fishNames[Random.nextInt(fishNames.size)]
-                                "Congratulations! You have caught a $randomFish"
+                                //var randomFish = fishNames[Random.nextInt(fishNames.size)]
+                                //"Congratulations! You have caught a $randomFish"
+
+                                when(retroViewModel.retroUiState){
+                                    is RetroUiState.Success -> {
+
+                                        HomeScreen(uiState = retroViewModel.retroUiState)
+                                        ""
+                                    }
+                                    is RetroUiState.Error -> "Error on request"
+                                    is RetroUiState.Loading -> "Loading"
+                                }
                             }
                         }
                     )
@@ -339,6 +358,8 @@ class MainActivity : ComponentActivity() {
                         if (currentState == 0 && lakeNode != null && tiltDetected) {
                             lakeNode!!.stopAnimation(animationName = "NoHook")
                             lakeNode!!.playAnimation(animationName = "HookIdle", loop = true)
+                            retroViewModel.getFishInfo(0)
+                            Log.println(Log.INFO,"Fish","done")
 
                             var waitTheCatch = Random.nextInt(500, 3501)
                             Handler().postDelayed({
@@ -347,9 +368,15 @@ class MainActivity : ComponentActivity() {
                                 lakeNode!!.playAnimation(animationName = "Catch", loop = true)
 
                                 currentState = 1
+
+
                             }, waitTheCatch.toLong())
 
                             tiltDetected = false
+
+                            //request random Fish
+
+
                         }
                     }
                     if (rotationSpeed > thresholdSpeed) {
@@ -464,3 +491,4 @@ class MainActivity : ComponentActivity() {
 
 
 }
+

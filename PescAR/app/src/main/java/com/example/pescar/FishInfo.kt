@@ -1,21 +1,19 @@
 package com.example.pescar
 
 import android.graphics.BitmapFactory
-import android.os.Bundle
 import android.util.Base64
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -24,26 +22,7 @@ import com.example.pescar.ui.theme.RetroTestTheme
 import com.google.gson.JsonObject
 
 
-class EXMainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            RetroTestTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    RetroApp()
-                }
-            }
-        }
-    }
-}
-
-
-
-@Preview(showBackground = true)
+@Preview(showBackground = false)
 @Composable
 fun RetroApp(
     retroViewModel: RetroViewModel = viewModel()
@@ -78,6 +57,8 @@ fun RetroApp(
                 HomeScreen(
                     uiState = retroViewModel.retroUiState
                 )
+
+
             }
         }
     }
@@ -100,14 +81,16 @@ fun FishInfoScreen(
     fishInfo: JsonObject
 ){
 
-    Column {
-        Text(fishInfo.get("name").toString())
-        Text(fishInfo.get("description").toString())
+    Surface{
+        Column (modifier = Modifier.background(color = Color.White)){
+            Text(fishInfo.get("name").toString() + "\n" +
+                    fishInfo.get("description").toString(), color = Color.Black)
 
-        DecodedImage(fishInfo.get("image").toString())
+            DecodedImage(fishInfo.get("image").toString())
 
-
+        }
     }
+
 }
 
 @Composable

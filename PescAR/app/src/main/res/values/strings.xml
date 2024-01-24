@@ -1,5 +1,7 @@
 <resources>
-    <string name="app_name">RetroTest</string>
+    <string name="app_name">PescAR</string>
     <string name="point_your_phone_down">Point your phone down at an empty space, and move it around slowly</string>
     <string name="tap_anywhere_to_add_model">Tap anywhere to add model</string>
+    <string name="cast_fishing_rod">Swing your phone forward to cast your fishing rod!</string>
+    <string name="pull_fishing_rod">Swing your phone backwards to catch the fish!</string>
 </resources>
