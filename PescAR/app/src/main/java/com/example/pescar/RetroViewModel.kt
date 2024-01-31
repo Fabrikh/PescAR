@@ -19,7 +19,7 @@ sealed interface RetroUiState {
 class RetroViewModel : ViewModel() {
 
     var retroUiState: RetroUiState by mutableStateOf(RetroUiState.Loading)
-        private set
+        public set
 
     fun getFishInfo(id :Int) {
         viewModelScope.launch {

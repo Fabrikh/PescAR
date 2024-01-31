@@ -238,8 +238,11 @@ class MainActivity : ComponentActivity() {
                         onGestureListener = rememberOnGestureListener(
                             onSingleTapConfirmed = { motionEvent, node ->
 
-                                if(currentState == 2)
+                                if(currentState == 2){
                                     currentState = 0
+                                    retroViewModel.retroUiState = RetroUiState.Loading
+                                }
+
 
                                 if (node == null && childNodes.isEmpty()) {
                                     val hitResults =
@@ -431,7 +434,8 @@ class MainActivity : ComponentActivity() {
                         this.playAnimation(animationName = "HookIdle", loop = true)
 
                         //this.playAnimation(animationName = "HookIdle", loop = true)
-
+                        retroViewModel.getFishInfo(0)
+                        Log.println(Log.INFO,"Fish","done")
                         var waitTheCatch = Random.nextInt(500, 3501)
                         Handler().postDelayed({
                             this.stopAnimation(animationName = "HookIdle")
