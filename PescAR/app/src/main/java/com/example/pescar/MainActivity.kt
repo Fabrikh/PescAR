@@ -365,6 +365,9 @@ class MainActivity : ComponentActivity() {
                             Log.println(Log.INFO,"Fish","done")
 
                             var waitTheCatch = Random.nextInt(500, 3501)
+
+                            while(retroViewModel.retroUiState == RetroUiState.Loading)
+
                             Handler().postDelayed({
                                 lakeNode!!.stopAnimation(animationName = "HookIdle")
                                 lakeNode!!.playAnimation(animationName = "FishHooking", loop = true)
@@ -436,6 +439,9 @@ class MainActivity : ComponentActivity() {
                         //this.playAnimation(animationName = "HookIdle", loop = true)
                         retroViewModel.getFishInfo(0)
                         Log.println(Log.INFO,"Fish","done")
+
+                        while(retroViewModel.retroUiState == RetroUiState.Loading)
+                            
                         var waitTheCatch = Random.nextInt(500, 3501)
                         Handler().postDelayed({
                             this.stopAnimation(animationName = "HookIdle")
