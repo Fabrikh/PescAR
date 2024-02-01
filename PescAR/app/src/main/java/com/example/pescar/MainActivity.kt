@@ -229,16 +229,32 @@ class MainActivity : ComponentActivity() {
                             )
 
                             Log.println(Log.INFO, "MyApp", rodNode.position.toString())*/
+                            if(currentState == 1)
+                                if(retroViewModel.retroUiState == RetroUiState.Error){
+                                    lakeNode!!.stopAnimation(animationName = "HookIdle")
+                                    lakeNode!!.playAnimation(animationName = "NoHook", loop = true)
+                                    lakeNode!!.playAnimation(animationName = "Idle", loop = true)
+                                    Log.println(Log.ERROR, "MyApp", "RetroViewModel Error")
+                                    currentState = 0
+                                }
+                                else if(retroViewModel.retroUiState != RetroUiState.Loading){
+                                    lakeNode!!.stopAnimation(animationName = "HookIdle")
+                                    lakeNode!!.playAnimation(animationName = "FishHooking", loop = true)
+                                    lakeNode!!.playAnimation(animationName = "Catch", loop = true)
+                                    Log.println(Log.INFO, "MyApp", "RetroViewModel Success")
+                                    currentState = 2
+                                }
 
                             if(internalState != currentState)
                                 internalState = currentState
+
 
                             frame = updatedFrame
                         },
                         onGestureListener = rememberOnGestureListener(
                             onSingleTapConfirmed = { motionEvent, node ->
 
-                                if(currentState == 2){
+                                if(currentState == 3){
                                     currentState = 0
                                     retroViewModel.retroUiState = RetroUiState.Loading
                                 }
@@ -301,9 +317,14 @@ class MainActivity : ComponentActivity() {
                                 stringResource(R.string.cast_fishing_rod)
                             }
                             1 -> {
+                                //"Swing your phone forward to cast your fishing rod!"
+                                stringResource(R.string.cast_fishing_rod)
+                            }
+                            2 -> {
                                 //"Swing your phone backwards to catch the fish!"
                                 stringResource(R.string.pull_fishing_rod)
                             }
+
                             else -> {
                                 //var randomFish = fishNames[Random.nextInt(fishNames.size)]
                                 //"Congratulations! You have caught a $randomFish"
@@ -352,7 +373,7 @@ class MainActivity : ComponentActivity() {
                 if (timeDifference > 0) {
                     val rotationSpeed = event.values[0] // Adjust index based on the gyroscope data
                     val thresholdSpeed = 1.5f // Adjust as needed
-                    Log.println(Log.INFO, "MyApp", rotationSpeed.toString())
+                    //Log.println(Log.INFO, "MyApp", rotationSpeed.toString())
                     // Check for negative rotation speed to detect downward tilt
                     if (rotationSpeed < -thresholdSpeed) {
                         Log.println(Log.INFO, "MyApp", "ENTRATO")
@@ -367,13 +388,7 @@ class MainActivity : ComponentActivity() {
                             var waitTheCatch = Random.nextInt(500, 3501)
 
                             Handler().postDelayed({
-                                lakeNode!!.stopAnimation(animationName = "HookIdle")
-                                lakeNode!!.playAnimation(animationName = "FishHooking", loop = true)
-                                lakeNode!!.playAnimation(animationName = "Catch", loop = true)
-
                                 currentState = 1
-
-
                             }, waitTheCatch.toLong())
 
                             tiltDetected = false
@@ -387,12 +402,12 @@ class MainActivity : ComponentActivity() {
                         Log.println(Log.INFO, "MyApp", "ENTRATO")
                         // Rapid downward motion detected, trigger animation
                         tiltDetected = true
-                        if (currentState == 1 && tiltDetected) {
+                        if (currentState == 2 && tiltDetected) {
                             lakeNode!!.stopAnimation(animationName = "Catch")
                             lakeNode!!.stopAnimation(animationName = "FishHooking")
                             lakeNode!!.playAnimation(animationName = "NoHook", loop = true)
                             lakeNode!!.playAnimation(animationName = "Idle", loop = true)
-                            currentState = 2
+                            currentState = 3
                             tiltDetected = false
                         }
                     }
@@ -440,10 +455,6 @@ class MainActivity : ComponentActivity() {
 
                         var waitTheCatch = Random.nextInt(500, 3501)
                         Handler().postDelayed({
-                            this.stopAnimation(animationName = "HookIdle")
-                            this.playAnimation(animationName = "FishHooking", loop = true)
-                            this.playAnimation(animationName = "Catch", loop = true)
-
                             currentState = 1
                         }, waitTheCatch.toLong())
 
@@ -452,12 +463,12 @@ class MainActivity : ComponentActivity() {
                 true
             }
             onLongPress = {e: MotionEvent ->
-                if (currentState == 1){
+                if (currentState == 2){
                     this.stopAnimation(animationName = "Catch")
                     this.stopAnimation(animationName = "FishHooking")
                     this.playAnimation(animationName = "NoHook", loop = true)
                     this.playAnimation(animationName = "Idle", loop = true)
-                    currentState = 2
+                    currentState = 3
                 }
                 true
             }
