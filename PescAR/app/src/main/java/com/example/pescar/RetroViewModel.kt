@@ -21,6 +21,12 @@ class RetroViewModel : ViewModel() {
     var retroUiState: RetroUiState by mutableStateOf(RetroUiState.Loading)
         public set
 
+    var fishCount: Int = 0
+
+    init {
+        getFishCount()
+    }
+
     fun getFishInfo(id :Int) {
         viewModelScope.launch {
             retroUiState = try {
@@ -30,6 +36,19 @@ class RetroViewModel : ViewModel() {
 
                 Log.println(Log.INFO,"ERR",e.message.toString())
                 RetroUiState.Error
+            }
+
+        }
+    }
+
+    fun getFishCount() {
+        viewModelScope.launch {
+            fishCount = try {
+                 RetroAPI.retrofitService.getFishCount().toInt()
+            }catch (e: IOException){
+
+                Log.println(Log.INFO,"ERR",e.message.toString())
+                -1
             }
 
         }

@@ -16,6 +16,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -332,7 +333,11 @@ class MainActivity : ComponentActivity() {
                                 when(retroViewModel.retroUiState){
                                     is RetroUiState.Success -> {
 
-                                        HomeScreen(uiState = retroViewModel.retroUiState)
+                                        Column(){
+                                            HomeScreen(uiState = retroViewModel.retroUiState)
+                                            Text(retroViewModel.fishCount.toString())
+                                        }
+
                                         ""
                                     }
                                     is RetroUiState.Error -> "Error on request"

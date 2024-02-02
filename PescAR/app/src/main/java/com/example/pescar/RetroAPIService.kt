@@ -24,4 +24,7 @@ object RetroAPI{
 interface RetroAPIService {
     @GET("/")
     suspend fun getFishInfo(@Query("id") id: Int): JsonObject
+
+    @GET("/fishcount")
+    suspend fun getFishCount(): String
 }
