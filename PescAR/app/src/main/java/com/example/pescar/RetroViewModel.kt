@@ -6,9 +6,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import kotlinx.coroutines.launch
 import java.io.IOException
+
 
 sealed interface RetroUiState {
     data class Success(val fishInfo: JsonObject) : RetroUiState
@@ -19,6 +22,9 @@ sealed interface RetroUiState {
 class RetroViewModel : ViewModel() {
 
     var retroUiState: RetroUiState by mutableStateOf(RetroUiState.Loading)
+        public set
+
+    var retroGridState: RetroUiState by mutableStateOf(RetroUiState.Loading)
         public set
 
     var fishCount: Int = 0
@@ -49,6 +55,19 @@ class RetroViewModel : ViewModel() {
 
                 Log.println(Log.INFO,"ERR",e.message.toString())
                 -1
+            }
+
+        }
+    }
+
+    fun getFishGrid() {
+        viewModelScope.launch {
+            retroGridState = try {
+                val jsonResult = RetroAPI.retrofitService.getFishGrid()
+                RetroUiState.Success(jsonResult)
+            }catch (e: IOException){
+                Log.println(Log.INFO,"ERR",e.message.toString())
+                RetroUiState.Error
             }
 
         }
