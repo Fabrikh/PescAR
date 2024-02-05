@@ -77,6 +77,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -606,11 +607,25 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceEvenly
             ) {
-                Text(
-                    text = "Fish Showcase",
-                    fontSize = 20.sp,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Fish Showcase",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f) // Takes up available space
+                    )
+                    Button(
+                        onClick = {
+                            navController.navigate("arbox")
+                        },
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        Text(text = "Close")
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
 
 
@@ -635,14 +650,6 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
 
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = {
-                        navController.navigate("arbox")
-                    },
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    Text(text = "Close")
-                }
             }
         }
     }
