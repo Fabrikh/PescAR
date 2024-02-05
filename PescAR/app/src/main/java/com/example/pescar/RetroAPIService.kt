@@ -27,4 +27,8 @@ interface RetroAPIService {
 
     @GET("/fishcount")
     suspend fun getFishCount(): String
+
+    @GET("/fishgrid")
+    suspend fun getFishGrid(): JsonObject
+
 }

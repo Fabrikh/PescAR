@@ -287,6 +287,7 @@ class MainActivity : ComponentActivity() {
 
 
                     )
+
                     Image(
 
                         painter = painterResource(id = R.drawable.rod),
@@ -333,10 +334,10 @@ class MainActivity : ComponentActivity() {
                                 when(retroViewModel.retroUiState){
                                     is RetroUiState.Success -> {
 
-                                        Column(){
-                                            HomeScreen(uiState = retroViewModel.retroUiState)
-                                            Text(retroViewModel.fishCount.toString())
+                                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()){
+                                            HomeScreen(uiState = retroViewModel.retroUiState, fishCount = retroViewModel.fishCount)
                                         }
+
 
                                         ""
                                     }
