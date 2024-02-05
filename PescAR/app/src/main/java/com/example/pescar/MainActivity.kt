@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -70,6 +69,14 @@ import io.github.sceneview.rememberView
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.Button
+
 
 private const val kModelFile = "models/lake_and_fish.glb"
 private const val kModelFile_Rod = "models/bamboo_fishing_rod.glb"
@@ -93,12 +100,15 @@ class MainActivity : ComponentActivity() {
 
     lateinit var retroViewModel: RetroViewModel
 
+    private var isBoxVisible by mutableStateOf(false)
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             RetroTestTheme {
+
                 // A surface container using the 'background' color from the theme
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -348,6 +358,77 @@ class MainActivity : ComponentActivity() {
                     )
 
                 }
+                // Add a button to open the box when clicked
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Button(
+                        onClick = {
+                            isBoxVisible = true
+                        },
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(text = "ShowCase")
+                    }
+                }
+
+                // Create a composable box with placeholder text
+                if (isBoxVisible) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                            .background(Color.White),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Fish Showcase",
+                                fontSize = 20.sp,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+
+
+                            ////
+                            val items = (0..12).toList()
+                            LazyVerticalGrid(
+                                columns = GridCells.Adaptive(minSize = 128.dp)
+                            ) {
+                                items(items) { item ->
+                                    // Each item in the grid
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(8.dp)
+                                            .size(100.dp)
+                                            .background(Color.Blue), // Replace with your item content
+                                    ) {
+                                        // You can place the content of each grid item here
+                                    }
+                                }
+                            }
+                            ////
+
+
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = {
+                                    isBoxVisible = false // Close the box when the button is clicked
+                                },
+                                modifier = Modifier.padding(8.dp)
+                            ) {
+                                Text(text = "Close")
+                            }
+                        }
+                    }
+                }
+
 
                 sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
                 accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
