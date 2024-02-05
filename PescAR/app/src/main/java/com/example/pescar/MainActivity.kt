@@ -78,6 +78,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -89,6 +90,7 @@ private const val kModelFile_Rod = "models/bamboo_fishing_rod.glb"
 private const val kMaxModelInstances = 1
 private var lakeNode: ModelNode? = null
 private var currentState = -1
+private var onFocusShowcase = false
 
 /*
 private val fishNames = listOf(
@@ -100,9 +102,6 @@ private val fishNames = listOf(
 )*/
 
 class MainActivity : ComponentActivity() {
-
-    private var sensorManager: SensorManager? = null
-    private var accelerometer: Sensor? = null
 
     lateinit var retroViewModel: RetroViewModel
 
@@ -132,93 +131,14 @@ class MainActivity : ComponentActivity() {
 
                 //ShowcaseBox(retroViewModel)
 
-
-
-
-            sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-            accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-            gyroscope = sensorManager?.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
-
-            // Register a lifecycle observer to start and stop sensor updates
-            registerSensorListener()
-
         }
     }
-
-    private fun registerSensorListener() {
-        sensorManager?.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_NORMAL)
-    }
-
-    private var gyroscope: Sensor? = null
-    private val gyroscopeValues = FloatArray(3)
-    private var lastTimestamp: Long = 0
-    private var tiltDetected = false
-
-    private val sensorEventListener = object : SensorEventListener {
-        override fun onSensorChanged(event: SensorEvent) {
-            if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
-                val currentTime = System.currentTimeMillis()
-                val timeDifference = currentTime - lastTimestamp
-                lastTimestamp = currentTime
-
-                if (timeDifference > 0) {
-                    val rotationSpeed = event.values[0] // Adjust index based on the gyroscope data
-                    val thresholdSpeed = 1.5f // Adjust as needed
-                    //Log.println(Log.INFO, "MyApp", rotationSpeed.toString())
-                    // Check for negative rotation speed to detect downward tilt
-                    if (rotationSpeed < -thresholdSpeed) {
-                        Log.println(Log.INFO, "MyApp", "ENTRATO")
-                        // Rapid downward motion detected, trigger animation
-                        tiltDetected = true
-                        if (currentState == 0 && lakeNode != null && tiltDetected) {
-                            lakeNode!!.stopAnimation(animationName = "NoHook")
-                            lakeNode!!.playAnimation(animationName = "HookIdle", loop = true)
-                            retroViewModel.getFishInfo(0)
-                            Log.println(Log.INFO,"Fish","done")
-
-                            var waitTheCatch = Random.nextInt(500, 3501)
-
-                            Handler().postDelayed({
-                                currentState = 1
-                            }, waitTheCatch.toLong())
-
-                            tiltDetected = false
-
-                            //request random Fish
-
-
-                        }
-                    }
-                    if (rotationSpeed > thresholdSpeed) {
-                        Log.println(Log.INFO, "MyApp", "ENTRATO")
-                        // Rapid downward motion detected, trigger animation
-                        tiltDetected = true
-                        if (currentState == 2 && tiltDetected) {
-                            lakeNode!!.stopAnimation(animationName = "Catch")
-                            lakeNode!!.stopAnimation(animationName = "FishHooking")
-                            lakeNode!!.playAnimation(animationName = "NoHook", loop = true)
-                            lakeNode!!.playAnimation(animationName = "Idle", loop = true)
-                            currentState = 3
-                            tiltDetected = false
-                        }
-                    }
-                }
-            }
-        }
-
-        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-            // Do nothing for now
-        }
-    }
-
-
-
 }
 
 
 @Composable
 fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
-
+    currentState = -1
     RetroTestTheme {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -258,7 +178,80 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
 
             }
 
+            var sensorManager: SensorManager? = null
+            var accelerometer: Sensor? = null
+            var gyroscope: Sensor? = null
+            val gyroscopeValues = FloatArray(3)
+            var lastTimestamp: Long = 0
+            var tiltDetected = false
+            val context = LocalContext.current
+            sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
+            accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+            gyroscope = sensorManager?.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+
+
+
+            val sensorEventListener = object : SensorEventListener {
+                override fun onSensorChanged(event: SensorEvent) {
+                    if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
+                        val currentTime = System.currentTimeMillis()
+                        val timeDifference = currentTime - lastTimestamp
+                        lastTimestamp = currentTime
+
+                        if (timeDifference > 0) {
+                            val rotationSpeed = event.values[0] // Adjust index based on the gyroscope data
+                            val thresholdSpeed = 1.5f // Adjust as needed
+                            //Log.println(Log.INFO, "MyApp", rotationSpeed.toString())
+                            // Check for negative rotation speed to detect downward tilt
+                            if (rotationSpeed < -thresholdSpeed) {
+                                Log.println(Log.INFO, "MyApp", "ENTRATO")
+                                // Rapid downward motion detected, trigger animation
+                                tiltDetected = true
+                                if (currentState == 0 && lakeNode != null && tiltDetected) {
+                                    lakeNode!!.stopAnimation(animationName = "NoHook")
+                                    lakeNode!!.playAnimation(animationName = "HookIdle", loop = true)
+                                    retroViewModel.getFishInfo(0)
+                                    Log.println(Log.INFO,"Fish","done")
+
+                                    var waitTheCatch = Random.nextInt(500, 3501)
+
+                                    Handler().postDelayed({
+                                        if(!onFocusShowcase)
+                                            currentState = 1
+                                    }, waitTheCatch.toLong())
+
+                                    tiltDetected = false
+
+                                    //request random Fish
+
+
+                                }
+                            }
+                            if (rotationSpeed > thresholdSpeed) {
+                                Log.println(Log.INFO, "MyApp", "ENTRATO")
+                                // Rapid downward motion detected, trigger animation
+                                tiltDetected = true
+                                if (currentState == 2 && tiltDetected) {
+                                    lakeNode!!.stopAnimation(animationName = "Catch")
+                                    lakeNode!!.stopAnimation(animationName = "FishHooking")
+                                    lakeNode!!.playAnimation(animationName = "NoHook", loop = true)
+                                    lakeNode!!.playAnimation(animationName = "Idle", loop = true)
+                                    currentState = 3
+                                    tiltDetected = false
+                                }
+                            }
+                        }
+                    }
+                }
+
+                override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+                    // Do nothing for now
+                }
+            }
+            fun registerSensorListener() {
+                sensorManager?.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_NORMAL)
+            }
 
             ARScene(
                 modifier = Modifier.fillMaxSize(),
@@ -350,7 +343,11 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
                 )
 
                 Log.println(Log.INFO, "MyApp", rodNode.position.toString())*/
-                    if (currentState == 1)
+
+                    if(onFocusShowcase){
+                        currentState = -1
+                    }
+                    if (currentState == 1 && !onFocusShowcase)
                         if (retroViewModel.retroUiState == RetroUiState.Error) {
                             lakeNode!!.stopAnimation(animationName = "HookIdle")
                             lakeNode!!.playAnimation(animationName = "NoHook", loop = true)
@@ -374,7 +371,7 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
                 onGestureListener = rememberOnGestureListener(
                     onSingleTapConfirmed = { motionEvent, node ->
 
-                        if (currentState == 3) {
+                        if (currentState == 3 || currentState == -1) {
                             currentState = 0
                             retroViewModel.retroUiState = RetroUiState.Loading
                         }
@@ -484,7 +481,9 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
             ) {
                 Button(
                     onClick = {
-                              navController.navigate("showcase")
+                        currentState = -1
+                        onFocusShowcase = true
+                        navController.navigate("showcase")
                     },
                     modifier = Modifier.padding(16.dp)
                 ) {
@@ -492,9 +491,18 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
                 }
             }
 
+
+            // Register a lifecycle observer to start and stop sensor updates
+            registerSensorListener()
         }
+
+
+
     }
+
+
 }
+
 
 fun createAnchorNode(
     engine: Engine,
@@ -533,7 +541,8 @@ fun createAnchorNode(
 
                     var waitTheCatch = Random.nextInt(500, 3501)
                     Handler().postDelayed({
-                        currentState = 1
+                        if(!onFocusShowcase)
+                            currentState = 1
                     }, waitTheCatch.toLong())
 
                 }
@@ -618,6 +627,7 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
                     )
                     Button(
                         onClick = {
+                            onFocusShowcase = false
                             navController.navigate("arbox")
                         },
                         modifier = Modifier.padding(8.dp)
