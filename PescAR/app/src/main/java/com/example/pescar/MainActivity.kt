@@ -521,8 +521,8 @@ fun createAnchorNode(
         onFling = {e1: MotionEvent?, e2: MotionEvent, v: Float2 ->
 
             if(e1 != null && e2.y < e1.y) {
-                if(currentState == 0) {
-
+                if(currentState == 0 && !entered) {
+                    entered = true
                     this.stopAnimation(animationName = "NoHook")
                     this.playAnimation(animationName = "HookIdle", loop = true)
 
@@ -534,6 +534,7 @@ fun createAnchorNode(
                     Handler().postDelayed({
                         if(!onFocusShowcase)
                             currentState = 1
+                        entered = false
                     }, waitTheCatch.toLong())
 
                 }
@@ -541,12 +542,14 @@ fun createAnchorNode(
             true
         }
         onLongPress = {e: MotionEvent ->
-            if (currentState == 2){
+            if (currentState == 2 && !entered){
+                entered = true
                 this.stopAnimation(animationName = "Catch")
                 this.stopAnimation(animationName = "FishHooking")
                 this.playAnimation(animationName = "NoHook", loop = true)
                 this.playAnimation(animationName = "Idle", loop = true)
                 currentState = 3
+                entered = false
             }
             true
         }
@@ -619,6 +622,7 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
                     Button(
                         onClick = {
                             onFocusShowcase = false
+                            entered = false
                             navController.navigate("arbox")
                         },
                         modifier = Modifier.padding(8.dp)
