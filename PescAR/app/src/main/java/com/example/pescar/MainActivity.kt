@@ -91,6 +91,7 @@ private const val kMaxModelInstances = 1
 private var lakeNode: ModelNode? = null
 private var currentState = -1
 private var onFocusShowcase = false
+private var entered = false
 
 /*
 private val fishNames = listOf(
@@ -201,14 +202,11 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
 
                         if (timeDifference > 0) {
                             val rotationSpeed = event.values[0] // Adjust index based on the gyroscope data
-                            val thresholdSpeed = 1.5f // Adjust as needed
-                            //Log.println(Log.INFO, "MyApp", rotationSpeed.toString())
-                            // Check for negative rotation speed to detect downward tilt
+                            val thresholdSpeed = 1.5f
                             if (rotationSpeed < -thresholdSpeed) {
                                 Log.println(Log.INFO, "MyApp", "ENTRATO")
-                                // Rapid downward motion detected, trigger animation
-                                tiltDetected = true
-                                if (currentState == 0 && lakeNode != null && tiltDetected) {
+                                if (currentState == 0 && lakeNode != null && !entered) {
+                                    entered = true
                                     lakeNode!!.stopAnimation(animationName = "NoHook")
                                     lakeNode!!.playAnimation(animationName = "HookIdle", loop = true)
                                     retroViewModel.getFishInfo(0)
@@ -219,26 +217,22 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
                                     Handler().postDelayed({
                                         if(!onFocusShowcase)
                                             currentState = 1
+                                        entered = false
                                     }, waitTheCatch.toLong())
-
-                                    tiltDetected = false
-
-                                    //request random Fish
-
 
                                 }
                             }
                             if (rotationSpeed > thresholdSpeed) {
                                 Log.println(Log.INFO, "MyApp", "ENTRATO")
                                 // Rapid downward motion detected, trigger animation
-                                tiltDetected = true
-                                if (currentState == 2 && tiltDetected) {
+                                if (currentState == 2 && !entered) {
+                                    entered = true
                                     lakeNode!!.stopAnimation(animationName = "Catch")
                                     lakeNode!!.stopAnimation(animationName = "FishHooking")
                                     lakeNode!!.playAnimation(animationName = "NoHook", loop = true)
                                     lakeNode!!.playAnimation(animationName = "Idle", loop = true)
                                     currentState = 3
-                                    tiltDetected = false
+                                    entered = false
                                 }
                             }
                         }
@@ -344,10 +338,7 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
 
                 Log.println(Log.INFO, "MyApp", rodNode.position.toString())*/
 
-                    if(onFocusShowcase){
-                        currentState = -1
-                    }
-                    if (currentState == 1 && !onFocusShowcase)
+                    if (currentState == 1)
                         if (retroViewModel.retroUiState == RetroUiState.Error) {
                             lakeNode!!.stopAnimation(animationName = "HookIdle")
                             lakeNode!!.playAnimation(animationName = "NoHook", loop = true)
