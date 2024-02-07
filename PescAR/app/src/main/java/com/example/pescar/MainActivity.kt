@@ -1,5 +1,6 @@
 package com.example.pescar
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -11,6 +12,15 @@ import android.util.Log
 import android.view.MotionEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.EaseOutBounce
+import androidx.compose.animation.core.EaseOutCubic
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -77,13 +87,20 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlin.math.pow
 
 
 private const val kModelFile = "models/lake_and_fish.glb"
@@ -123,6 +140,7 @@ class MainActivity : ComponentActivity() {
 
                 composable("arbox") {ARBox(retroViewModel, navController)}
                 composable("showcase") {ShowcaseBox(retroViewModel, navController)}
+                composable("test"){TestBox(retroViewModel)}
             }
 
 
@@ -448,16 +466,23 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
 
                                 Box(
                                     contentAlignment = Alignment.Center,
-                                    modifier = Modifier.fillMaxSize()
-                                        .clickable { if (currentState == 3 || currentState == -1) {
-                                            currentState = 0
-                                            retroViewModel.retroUiState = RetroUiState.Loading
-                                        } }
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clickable {
+                                            if (currentState == 3 || currentState == -1) {
+                                                currentState = 0
+                                                retroViewModel.retroUiState = RetroUiState.Loading
+                                            }
+                                        }
                                 ) {
-                                    HomeScreen(
+                                    
+                                    /*HomeScreen(
                                         uiState = retroViewModel.retroUiState,
-                                        fishCount = retroViewModel.fishCount
-                                    )
+                                        fishCount = retroViewModel.fishCount,
+                                        false
+                                    )*/
+                                    
+                                    TestBox(retroViewModel = retroViewModel)
 
                                 }
 
@@ -664,4 +689,135 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
             }
         }
     }
+}
+
+@SuppressLint("CoroutineCreationDuringComposition")
+@Composable
+fun TestBox(retroViewModel: RetroViewModel){
+
+    val configuration = LocalConfiguration.current
+
+    val screenHeight = configuration.screenHeightDp.dp
+
+    //retroViewModel.getFishInfo(1)
+
+    val scaleAnimation = remember { Animatable(0.5f) }
+    val rotateYAnimation = remember { Animatable(180f) }
+    val yAnimation = remember { Animatable(-1.5f) }
+
+    when(retroViewModel.retroUiState){
+        is RetroUiState.Success -> {
+            LaunchedEffect("animationKey") {
+
+                yAnimation.animateTo(0f, animationSpec = tween(durationMillis = 1000, easing = EaseOutCubic))
+                rotateYAnimation.animateTo(0f, animationSpec = tween(durationMillis = 1000 ,easing = CubicBezierEasing(0.0f, 0.42f, 1.0f, 0.58f)))
+                scaleAnimation.animateTo(1.0f)
+
+            }
+        }
+
+        else -> {
+
+        }
+    }
+
+
+
+    var cardFace by remember {
+        mutableStateOf(CardFace.Front)
+    }
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                scaleX = scaleAnimation.value
+                scaleY = scaleAnimation.value
+                translationY = yAnimation.value * screenHeight.toPx()
+            }
+
+
+
+    ) {
+        FlipCard(
+            cardFace = cardFace,
+            onClick = { cardFace = cardFace.next },
+            modifier = Modifier
+                .fillMaxWidth(.5f)
+                .aspectRatio(1f),
+            front = {
+                HomeScreen(
+                    uiState = retroViewModel.retroUiState,
+                    fishCount = retroViewModel.fishCount,
+                    backSide = false
+                )
+            },
+            back = {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            rotationY = 180f
+                        },
+                ) {
+                    HomeScreen(
+                        uiState = retroViewModel.retroUiState,
+                        fishCount = retroViewModel.fishCount,
+                        backSide = true
+                    )
+                }
+            },
+            rotation = rotateYAnimation
+        )
+
+    }
+
+
+
+
+
+
+
+
+}
+
+enum class CardFace(val angle: Float) {
+    Front(0f) {
+        override val next: CardFace
+            get() = Back
+    },
+    Back(180f) {
+        override val next: CardFace
+            get() = Front
+    };
+
+    abstract val next: CardFace
+}
+
+@Composable
+fun FlipCard(
+    cardFace: CardFace,
+    onClick: (CardFace) -> Unit,
+    modifier: Modifier = Modifier,
+    back: @Composable () -> Unit = {},
+    front: @Composable () -> Unit = {},
+    rotation: Animatable<Float,AnimationVector1D>
+) {
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                rotationY = rotation.value
+                scaleX = (rotation.value / 90 - 1).pow(2) / 2 + 0.5F
+            }
+    ) {
+        if (rotation.value <= 90f) {
+            front()
+        } else {
+            back()
+        }
+    }
+
 }

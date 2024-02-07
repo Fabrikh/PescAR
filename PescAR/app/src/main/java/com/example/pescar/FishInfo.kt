@@ -12,10 +12,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -68,7 +70,8 @@ fun RetroApp(
                         Text("2")
                     }
                     Button(onClick = {
-                        retroViewModel.getFishInfo(3)}
+                        retroViewModel.getFishInfo(3)
+                    }
                     ) {
                         Text("3")
                     }
@@ -76,7 +79,8 @@ fun RetroApp(
 
                 HomeScreen(
                     uiState = retroViewModel.retroUiState,
-                    fishCount = retroViewModel.fishCount
+                    fishCount = retroViewModel.fishCount,
+                    backSide = true
                 )
 
 
@@ -87,12 +91,12 @@ fun RetroApp(
 
 @Composable
 fun HomeScreen(
-    uiState: RetroUiState, fishCount: Int, modifier: Modifier = Modifier
+    uiState: RetroUiState, fishCount: Int, backSide: Boolean, modifier: Modifier = Modifier
 ) {
 
-    Box (contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()){
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
         when (uiState) {
-            is RetroUiState.Success -> FishInfoCard(uiState.fishInfo, fishCount)
+            is RetroUiState.Success -> FishInfoCard(uiState.fishInfo, fishCount, backSide)
             is RetroUiState.Error -> ErrorScreen()
             is RetroUiState.Loading -> LoadingScreen()
             else -> {}
@@ -103,12 +107,14 @@ fun HomeScreen(
 @Composable
 fun FishInfoScreen(
     fishInfo: JsonObject
-){
+) {
 
-    Surface{
-        Column (modifier = Modifier.background(color = Color.White)){
-            Text(fishInfo.get("name").toString() + "\n" +
-                    fishInfo.get("description").toString(), color = Color.Black)
+    Surface {
+        Column(modifier = Modifier.background(color = Color.White)) {
+            Text(
+                fishInfo.get("name").toString() + "\n" +
+                        fishInfo.get("description").toString(), color = Color.Black
+            )
 
             DecodedImage(fishInfo.get("image").toString())
 
@@ -118,49 +124,57 @@ fun FishInfoScreen(
 }
 
 @Composable
-fun DecodedImage(imageB64String: String){
+fun DecodedImage(imageB64String: String) {
     val imageBytes = Base64.decode(imageB64String, Base64.DEFAULT)
     val decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
 
 
-    return Image(bitmap = decodedImage.asImageBitmap(),
+    return Image(
+        bitmap = decodedImage.asImageBitmap(),
         contentDescription = "fish",
         contentScale = ContentScale.Fit,
         modifier = Modifier
             .height(150.dp)
-            .fillMaxWidth())
+            .fillMaxWidth()
+    )
 }
 
 @Composable
-fun ErrorScreen(){
+fun ErrorScreen() {
     Text("Error")
 }
 
 @Composable
-fun LoadingScreen(){
+fun LoadingScreen() {
     Text("Loading...")
 }
 
 
-val WRITING_BACKGROUND_COLOR = Color(0,29,245, 150)
-val TEXT_COLOR = Color(210,230,243)
-val BORDER_COLOR = Color(20,70,245, 10)
+val WRITING_BACKGROUND_COLOR = Color(0, 29, 245, 150)
+val TEXT_COLOR = Color(210, 230, 243)
+val BORDER_COLOR = Color(20, 70, 245, 10)
 val CARD_BACKGROUND_COLOR_LIST = listOf(
-    Color(53,129,245),Color(20,100,245)
+    Color(53, 129, 245), Color(20, 100, 245)
 )
 
 @Composable
 fun FishInfoCard(
     fishInfo: JsonObject,
-    fishCount: Int
-){
+    fishCount: Int,
+    backSide: Boolean
+) {
     val cardShape = RoundedCornerShape(8.dp)
 
     Surface(
-        modifier = Modifier.padding(10.dp).clip(cardShape)
-    ){
-        Column (modifier = Modifier,
-            horizontalAlignment = Alignment.CenterHorizontally){
+        modifier = Modifier
+            .padding(10.dp)
+            .clip(cardShape)
+
+    ) {
+        Column(
+            modifier = Modifier,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
 
             Card(
                 //shape = MaterialTheme.shapes.medium,
@@ -168,80 +182,56 @@ fun FishInfoCard(
                 // modifier = modifier.size(280.dp, 240.dp)
                 modifier = Modifier
                     .fillMaxWidth()
-                ,
+                    .height(460.dp),
                 border = BorderStroke(2.dp, Color.Black),
                 //set card elevation of the card
                 elevation = CardDefaults.cardElevation(
-                    defaultElevation =  0.dp,
+                    defaultElevation = 0.dp,
                 ),
             ) {
-                Column(modifier = Modifier.background(
-                    Brush.horizontalGradient(CARD_BACKGROUND_COLOR_LIST,
-                        endX = with(LocalDensity.current) {
-                            50.dp.toPx()
-                        }
-                        ,
-                        tileMode = TileMode.Mirror
-                    )
-                )) {
-
-
-                    Row (
+                if (!backSide) {
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .background(WRITING_BACKGROUND_COLOR),
-                        horizontalArrangement  =  Arrangement.SpaceBetween,
-
-                        ){
-                        Text(
-                            text = fixJsonString(fishInfo.get("name").toString()),
-                            style = MaterialTheme.typography.headlineMedium,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(horizontal = 10.dp),
-                            color = TEXT_COLOR
-                        )
-                        Text(
-                            text = fixJsonString(fishInfo.get("id").toString()) + "/" + fishCount.toString(),
-                            style = MaterialTheme.typography.headlineMedium,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(horizontal = 10.dp),
-                            textAlign = TextAlign.End,
-                            color = TEXT_COLOR
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(5.dp))
-
-                    Card(
-                        shape = RoundedCornerShape(8.dp),
-                        // modifier = modifier.size(280.dp, 240.dp)
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp),
-                        border = BorderStroke(1.dp, BORDER_COLOR),
-                        //set card elevation of the card
-                        elevation = CardDefaults.cardElevation(
-                            defaultElevation =  0.dp,
-                        ),
-                       ) {
-
-                        Box (Modifier
-                            .fillMaxWidth(),
-                            contentAlignment = Alignment.Center){
-                            Image(
-                                painter = painterResource(id = R.drawable.sea_background),
-                                contentDescription = null
+                            .background(
+                                Brush.horizontalGradient(
+                                    CARD_BACKGROUND_COLOR_LIST,
+                                    endX = with(LocalDensity.current) {
+                                        50.dp.toPx()
+                                    },
+                                    tileMode = TileMode.Mirror
+                                )
                             )
-                            DecodedImage(
-                                fishInfo.get("image").toString()
+                            .fillMaxHeight()
+                    ) {
+
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(WRITING_BACKGROUND_COLOR),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+
+                            ) {
+                            Text(
+                                text = fixJsonString(fishInfo.get("name").toString()),
+                                style = MaterialTheme.typography.headlineMedium,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(horizontal = 10.dp),
+                                color = TEXT_COLOR
+                            )
+                            Text(
+                                text = fixJsonString(
+                                    fishInfo.get("id").toString()
+                                ) + "/" + fishCount.toString(),
+                                style = MaterialTheme.typography.headlineMedium,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(horizontal = 10.dp),
+                                textAlign = TextAlign.End,
+                                color = TEXT_COLOR
                             )
                         }
-                    }
-
-                    Column(modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally) {
-
                         Spacer(modifier = Modifier.height(5.dp))
 
                         Card(
@@ -253,19 +243,88 @@ fun FishInfoCard(
                             border = BorderStroke(1.dp, BORDER_COLOR),
                             //set card elevation of the card
                             elevation = CardDefaults.cardElevation(
-                                defaultElevation =  10.dp,
+                                defaultElevation = 0.dp,
                             ),
-                            colors = CardDefaults.cardColors(
-                                containerColor =  WRITING_BACKGROUND_COLOR,
-                            ),){
-                            Text(
-                                modifier = Modifier.padding(8.dp),
-                                text = fixJsonString(fishInfo.get("description").toString()),
-                                //maxLines = 1,
-                                //overflow = TextOverflow.Ellipsis,
-                                style = MaterialTheme.typography.titleSmall,
-                                color = TEXT_COLOR
+                        ) {
+
+                            Box(
+                                Modifier
+                                    .fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.sea_background),
+                                    contentDescription = null
+                                )
+                                DecodedImage(
+                                    fishInfo.get("image").toString()
+                                )
+                            }
+                        }
+
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+
+                            Spacer(modifier = Modifier.height(5.dp))
+
+                            Card(
+                                shape = RoundedCornerShape(8.dp),
+                                // modifier = modifier.size(280.dp, 240.dp)
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(10.dp),
+                                border = BorderStroke(1.dp, BORDER_COLOR),
+                                //set card elevation of the card
+                                elevation = CardDefaults.cardElevation(
+                                    defaultElevation = 10.dp,
+                                ),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = WRITING_BACKGROUND_COLOR,
+                                ),
+                            ) {
+                                Text(
+                                    modifier = Modifier.padding(8.dp),
+                                    text = fixJsonString(fishInfo.get("description").toString()),
+                                    //maxLines = 1,
+                                    //overflow = TextOverflow.Ellipsis,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = TEXT_COLOR
+                                )
+                            }
+
+                        }
+                    }
+
+                } else {
+                    Column(
+                        modifier = Modifier,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+
+                        Card(
+                            //shape = MaterialTheme.shapes.medium,
+                            shape = cardShape,
+                            // modifier = modifier.size(280.dp, 240.dp)
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            border = BorderStroke(2.dp, Color.Black),
+                            //set card elevation of the card
+                            elevation = CardDefaults.cardElevation(
+                                defaultElevation = 0.dp,
                             )
+                        ) {
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        color = Color(0, 29, 245, 255)
+                                    )
+                            ) {
+
+                            }
                         }
 
                     }
@@ -278,16 +337,16 @@ fun FishInfoCard(
 }
 
 private fun fixJsonString(s: String): String {
-    return s.replace("\"","")
+    return s.replace("\"", "")
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = false)
 @Composable
-fun Preview(){
-    Surface(){
-        Column (
+fun Preview() {
+    Surface() {
+        Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            ){
+        ) {
 
             Card(
                 //shape = MaterialTheme.shapes.medium,
@@ -299,26 +358,28 @@ fun Preview(){
                 border = BorderStroke(2.dp, Color.Black),
                 //set card elevation of the card
                 elevation = CardDefaults.cardElevation(
-                    defaultElevation =  10.dp,
+                    defaultElevation = 10.dp,
                 ),
             ) {
-                Column(modifier = Modifier.background(
-                    Brush.horizontalGradient(CARD_BACKGROUND_COLOR_LIST,
-                        endX = with(LocalDensity.current) {
-                            50.dp.toPx()
-                        }
-                        ,
-                        tileMode = TileMode.Mirror
+                Column(
+                    modifier = Modifier.background(
+                        Brush.horizontalGradient(
+                            CARD_BACKGROUND_COLOR_LIST,
+                            endX = with(LocalDensity.current) {
+                                50.dp.toPx()
+                            },
+                            tileMode = TileMode.Mirror
+                        )
                     )
-                )) {
+                ) {
 
-                    Row (
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(WRITING_BACKGROUND_COLOR),
-                        horizontalArrangement  =  Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.SpaceBetween,
 
-                    ){
+                        ) {
                         Text(
                             text = "Orca",
                             style = MaterialTheme.typography.headlineMedium,
@@ -348,13 +409,15 @@ fun Preview(){
                         border = BorderStroke(1.dp, BORDER_COLOR),
                         //set card elevation of the card
                         elevation = CardDefaults.cardElevation(
-                            defaultElevation =  10.dp,
+                            defaultElevation = 10.dp,
                         ),
-                        ) {
+                    ) {
 
-                        Box (Modifier
-                            .fillMaxWidth(),
-                            contentAlignment = Alignment.Center){
+                        Box(
+                            Modifier
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Image(
                                 painter = painterResource(id = R.drawable.sea_background),
                                 contentDescription = null
@@ -365,8 +428,10 @@ fun Preview(){
                         }
                     }
 
-                    Column(modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
 
 
                         Spacer(modifier = Modifier.height(5.dp))
@@ -381,11 +446,12 @@ fun Preview(){
                             border = BorderStroke(1.dp, BORDER_COLOR),
                             //set card elevation of the card
                             elevation = CardDefaults.cardElevation(
-                                defaultElevation =  10.dp,
+                                defaultElevation = 10.dp,
                             ),
                             colors = CardDefaults.cardColors(
-                                containerColor =  WRITING_BACKGROUND_COLOR,
-                            ),){
+                                containerColor = WRITING_BACKGROUND_COLOR,
+                            ),
+                        ) {
                             Text(
                                 modifier = Modifier.padding(8.dp),
                                 text = "L'orca, o balena killer, è un predatore intelligente e sociale con una vasta gamma di vocalizzazioni.",
@@ -403,4 +469,46 @@ fun Preview(){
 
     }
 
+}
+
+@Preview(showBackground = false)
+@Composable
+fun Preview2() {
+    val cardShape = RoundedCornerShape(8.dp)
+
+    Surface(
+        modifier = Modifier
+            .padding(10.dp)
+            .clip(cardShape)
+    ) {
+        Column(
+            modifier = Modifier,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Card(
+                //shape = MaterialTheme.shapes.medium,
+                shape = cardShape,
+                // modifier = modifier.size(280.dp, 240.dp)
+                modifier = Modifier
+                    .height(460.dp)
+                    .fillMaxWidth(),
+                border = BorderStroke(2.dp, Color.Black),
+                //set card elevation of the card
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 0.dp,
+                )
+            ) {
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            color = Color(0, 29, 245, 255)
+                        )
+                ) {}
+            }
+
+        }
+    }
 }
