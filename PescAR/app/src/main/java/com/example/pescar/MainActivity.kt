@@ -70,6 +70,7 @@ import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -448,11 +449,16 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
                                 Box(
                                     contentAlignment = Alignment.Center,
                                     modifier = Modifier.fillMaxSize()
+                                        .clickable { if (currentState == 3 || currentState == -1) {
+                                            currentState = 0
+                                            retroViewModel.retroUiState = RetroUiState.Loading
+                                        } }
                                 ) {
                                     HomeScreen(
                                         uiState = retroViewModel.retroUiState,
                                         fishCount = retroViewModel.fishCount
                                     )
+
                                 }
 
 
@@ -468,7 +474,7 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
 
             Box(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
+                contentAlignment = Alignment.BottomCenter,
             ) {
                 Button(
                     onClick = {
