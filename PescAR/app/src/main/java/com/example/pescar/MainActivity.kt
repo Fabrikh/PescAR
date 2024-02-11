@@ -90,8 +90,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.TransformOrigin
@@ -106,8 +109,14 @@ import com.google.gson.JsonObject
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlin.math.pow
-import android.widget.ImageView
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.graphics.vector.ImageVector
 
 
 private const val kModelFile = "models/lake_and_fish.glb"
@@ -131,9 +140,6 @@ class MainActivity : ComponentActivity() {
 
     lateinit var retroViewModel: RetroViewModel
 
-    private var isBoxVisible by mutableStateOf(false)
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -147,6 +153,15 @@ class MainActivity : ComponentActivity() {
 
                 composable("arbox") {ARBox(retroViewModel, navController)}
                 composable("showcase") {ShowcaseBox(retroViewModel, navController)}
+                composable("fishDetail/{fishId}", arguments = listOf(
+                    navArgument("fishId") { type = NavType.IntType }
+                )) { backStackEntry ->
+                    FishDetailScreen(
+                        fishId = backStackEntry.arguments?.getInt("fishId") ?: 0,
+                        navController = navController,
+                        retroViewModel = retroViewModel
+                    )
+                }
                 composable("test"){TestBox(retroViewModel)}
             }
 
@@ -637,18 +652,25 @@ fun decodeBase64ToImageBitmap(base64String: String): androidx.compose.ui.graphic
 }
 
 @Composable
-fun FishGrid(fishPairs: List<Pair<String, String>>) {
+fun FishGrid(fishPairs: List<Pair<String, String>>, navController: NavController) {
     LazyVerticalGrid(columns = GridCells.Fixed(3), // Set the number of columns here
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(fishPairs) { pair ->
+            val fishId = pair.first
             val imageBitmap = decodeBase64ToImageBitmap(pair.second)
-            if (imageBitmap != null) {
+            imageBitmap?.let {
                 Image(
-                    bitmap = imageBitmap,
-                    contentDescription = "Fish ID: ${pair.first}"
+                    bitmap = it,
+                    contentDescription = "Fish ID: $fishId",
+                    modifier = Modifier
+                        .size(128.dp)
+                        .clickable {
+                            // Navigate to the fish detail screen with arguments
+                            navController.navigate("fishDetail/$fishId")
+                        }
                 )
             }
         }
@@ -662,7 +684,7 @@ fun convertJsonToPairs(jsonObject: JsonObject): List<Pair<String, String>> {
 }
 
 @Composable
-fun FishGridDisplay(viewModel: RetroViewModel) {
+fun FishGridDisplay(viewModel: RetroViewModel, navController: NavController) {
     val state = viewModel.retroGridState
     when (state) {
         is RetroUiState.Loading -> {
@@ -673,7 +695,7 @@ fun FishGridDisplay(viewModel: RetroViewModel) {
         is RetroUiState.Success -> {
             val fishPairs = convertJsonToPairs(state.fishInfo)
             Log.println(Log.INFO, "FishGrid", fishPairs.toString())
-            FishGrid(fishPairs)
+            FishGrid(fishPairs, navController = navController)
         }
 
         is RetroUiState.Error -> {
@@ -730,11 +752,75 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
                 Spacer(modifier = Modifier.height(16.dp))
 
 
-                FishGridDisplay(retroViewModel)
+                FishGridDisplay(retroViewModel, navController)
 
 
                 Spacer(modifier = Modifier.height(16.dp))
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FishDetailScreen(fishId: Int, navController: NavController, retroViewModel: RetroViewModel) {
+    retroViewModel.getFishInfo(fishId)
+    val state = retroViewModel.retroUiState
+    var name = ""
+    var image = ""
+    var description = ""
+    when (state) {
+        is RetroUiState.Loading -> {
+            // Display a loading indicator
+            Log.println(Log.INFO, "FishDetail", "Loading")
+        }
+
+        is RetroUiState.Success -> {
+            name = state.fishInfo.get("name").toString()
+            name = name.substring(1, name.length - 1)
+            image = state.fishInfo.get("image").toString()
+            description = state.fishInfo.get("description").toString()
+            description = description.substring(1, description.length - 1)
+        }
+
+        is RetroUiState.Error -> {
+            // Display an error message
+            Log.println(Log.INFO, "FishDetail", "Error")
+        }
+    }
+
+
+    Column {
+        TopAppBar(
+            title = { Text(name) },
+            navigationIcon = {
+                IconButton(onClick = { navController.navigateUp() }) {
+                    Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                }
+            },
+
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(text = "Fish ID: $fishId", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            val imageBitmap = decodeBase64ToImageBitmap(image)
+            imageBitmap?.let {
+                Image(
+                    bitmap = it,
+                    contentDescription = "Fish ID: $fishId",
+                    modifier = Modifier
+                        .size(128.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Detail: $description", fontSize = 20.sp)
         }
     }
 }
