@@ -2,12 +2,14 @@ package com.example.pescar
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.os.Handler
+import android.util.Base64
 import android.util.Log
 import android.view.MotionEvent
 import androidx.activity.ComponentActivity
@@ -82,9 +84,11 @@ import kotlin.time.DurationUnit
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -98,9 +102,12 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.gson.JsonObject
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlin.math.pow
+import android.widget.ImageView
+import androidx.compose.ui.graphics.asImageBitmap
 
 
 private const val kModelFile = "models/lake_and_fish.glb"
@@ -618,6 +625,64 @@ fun createAnchorNode(
     return anchorNode
 }
 
+fun decodeBase64ToImageBitmap(base64String: String): androidx.compose.ui.graphics.ImageBitmap? {
+    return try {
+        val imageBytes = Base64.decode(base64String, Base64.DEFAULT)
+        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+        bitmap.asImageBitmap()
+    } catch (e: Exception) {
+        Log.e("ImageDecoding", "Error decoding base64 image", e)
+        null
+    }
+}
+
+@Composable
+fun FishGrid(fishPairs: List<Pair<String, String>>) {
+    LazyVerticalGrid(columns = GridCells.Fixed(3), // Set the number of columns here
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        items(fishPairs) { pair ->
+            val imageBitmap = decodeBase64ToImageBitmap(pair.second)
+            if (imageBitmap != null) {
+                Image(
+                    bitmap = imageBitmap,
+                    contentDescription = "Fish ID: ${pair.first}"
+                )
+            }
+        }
+    }
+}
+
+fun convertJsonToPairs(jsonObject: JsonObject): List<Pair<String, String>> {
+    return jsonObject.entrySet().map { entry ->
+        entry.key to entry.value.asString
+    }
+}
+
+@Composable
+fun FishGridDisplay(viewModel: RetroViewModel) {
+    val state = viewModel.retroGridState
+    when (state) {
+        is RetroUiState.Loading -> {
+            // Display a loading indicator
+            Log.println(Log.INFO, "FishGrid", "Loading")
+        }
+
+        is RetroUiState.Success -> {
+            val fishPairs = convertJsonToPairs(state.fishInfo)
+            Log.println(Log.INFO, "FishGrid", fishPairs.toString())
+            FishGrid(fishPairs)
+        }
+
+        is RetroUiState.Error -> {
+            // Display an error message
+            Log.println(Log.INFO, "FishGrid", "Error")
+        }
+    }
+}
+
 @Composable
 fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
 
@@ -665,24 +730,7 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
                 Spacer(modifier = Modifier.height(16.dp))
 
 
-                ////
-                val items = (0..12).toList()
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 128.dp)
-                ) {
-                    items(items) { item ->
-                        // Each item in the grid
-                        Box(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .size(100.dp)
-                                .background(Color.Blue), // Replace with your item content
-                        ) {
-                            // You can place the content of each grid item here
-                        }
-                    }
-                }
-                ////
+                FishGridDisplay(retroViewModel)
 
 
                 Spacer(modifier = Modifier.height(16.dp))

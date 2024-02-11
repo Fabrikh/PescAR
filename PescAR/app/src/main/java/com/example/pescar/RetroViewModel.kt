@@ -31,6 +31,7 @@ class RetroViewModel : ViewModel() {
 
     init {
         getFishCount()
+        getFishGrid()
     }
 
     fun getFishInfo(id :Int) {
