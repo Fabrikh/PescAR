@@ -24,6 +24,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -87,13 +88,21 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -136,10 +145,11 @@ class MainActivity : ComponentActivity() {
 
             val navController = rememberNavController()
 
-            NavHost(navController, startDestination = "arbox") {
+            NavHost(navController, startDestination = "menu") {
 
                 composable("arbox") {ARBox(retroViewModel, navController)}
                 composable("showcase") {ShowcaseBox(retroViewModel, navController)}
+                composable("menu") { MenuScreen(retroViewModel, navController) }
                 composable("test"){TestBox(retroViewModel)}
             }
 
@@ -654,7 +664,7 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
                         onClick = {
                             onFocusShowcase = false
                             entered = false
-                            navController.navigate("arbox")
+                            navController.popBackStack()
                         },
                         modifier = Modifier.padding(8.dp)
                     ) {
@@ -773,13 +783,6 @@ fun TestBox(retroViewModel: RetroViewModel){
 
     }
 
-
-
-
-
-
-
-
 }
 
 enum class CardFace(val angle: Float) {
@@ -820,4 +823,75 @@ fun FlipCard(
         }
     }
 
+}
+
+@Composable
+fun MenuScreen(retroViewModel: RetroViewModel, navController: NavController){
+
+
+    Box(modifier = Modifier
+        .background(Color(45, 67, 208))
+        .paint(painter = painterResource(id = R.drawable.menuback), contentScale = ContentScale.FillWidth)
+        .fillMaxSize(),
+        contentAlignment = Alignment.Center){
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Image(painter = painterResource(id = R.drawable.logocard2), contentDescription = null,
+                modifier = Modifier.scale(2f))
+
+            Spacer(modifier = Modifier.height(200.dp))
+
+            ElevatedButton(onClick = {navController.navigate("arbox")},
+                modifier = Modifier.width(150.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255)),
+                border = BorderStroke(2.dp,Color(22, 89, 112, 120))
+            ) {
+                Text("START",fontWeight = FontWeight.Bold)
+            }
+            ElevatedButton(onClick = {navController.navigate("showcase")},
+                modifier = Modifier.width(150.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255)),
+                border = BorderStroke(2.dp,Color(22, 89, 112, 120))
+            ) {
+                Text("SHOWCASE",fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+
+}
+
+@Preview(showBackground = true)
+@Composable
+fun Menu(){
+
+    Box(modifier = Modifier
+        .background(Color(45, 67, 208))
+        .fillMaxSize(),
+        contentAlignment = Alignment.Center){
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceEvenly
+        ) {
+
+            Image(painter = painterResource(id = R.drawable.logoname), contentDescription = null,)
+
+            Spacer(modifier = Modifier.height(50.dp))
+
+            ElevatedButton(onClick = {},
+                modifier = Modifier.width(150.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(129, 144, 240, 255))
+            ) {
+                Text("Start")
+            }
+            ElevatedButton(onClick = {},
+                modifier = Modifier.width(150.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(129, 144, 240, 255))) {
+                Text("Showcase")
+            }
+        }
+    }
 }

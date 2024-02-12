@@ -150,7 +150,7 @@ fun LoadingScreen() {
 }
 
 
-val WRITING_BACKGROUND_COLOR = Color(0, 29, 245, 150)
+val WRITING_BACKGROUND_COLOR = Color(0, 29, 245, 255)
 val TEXT_COLOR = Color(210, 230, 243)
 val BORDER_COLOR = Color(20, 70, 245, 10)
 val CARD_BACKGROUND_COLOR_LIST = listOf(
@@ -308,22 +308,32 @@ fun FishInfoCard(
                             shape = cardShape,
                             // modifier = modifier.size(280.dp, 240.dp)
                             modifier = Modifier
+                                .height(460.dp)
                                 .fillMaxWidth(),
                             border = BorderStroke(2.dp, Color.Black),
                             //set card elevation of the card
                             elevation = CardDefaults.cardElevation(
                                 defaultElevation = 0.dp,
-                            )
-                        ) {
+                            ),
 
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(
-                                        color = Color(0, 29, 245, 255)
-                                    )
+
                             ) {
 
+                            Card(
+                                border = BorderStroke(10.dp, TEXT_COLOR),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = WRITING_BACKGROUND_COLOR
+                                )) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.logocard2),
+                                        contentDescription = null
+                                    )
+                                }
                             }
                         }
 
@@ -497,16 +507,27 @@ fun Preview2() {
                 //set card elevation of the card
                 elevation = CardDefaults.cardElevation(
                     defaultElevation = 0.dp,
-                )
+                ),
+
+
             ) {
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            color = Color(0, 29, 245, 255)
+                Card(
+                    border = BorderStroke(10.dp, TEXT_COLOR),
+                    colors = CardDefaults.cardColors(
+                        containerColor = WRITING_BACKGROUND_COLOR
+                    )) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.logocard2),
+                            contentDescription = null
                         )
-                ) {}
+                    }
+                }
             }
 
         }
