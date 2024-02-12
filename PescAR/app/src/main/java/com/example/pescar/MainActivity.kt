@@ -2,6 +2,7 @@ package com.example.pescar
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.graphics.BitmapFactory
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -150,12 +151,11 @@ private val fishNames = listOf(
 )*/
 
 class MainActivity : ComponentActivity() {
-
     lateinit var retroViewModel: RetroViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         setContent {
 
             retroViewModel = viewModel()
