@@ -126,6 +126,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.coroutines.CoroutineStart
 import kotlin.io.encoding.Base64
@@ -139,7 +140,6 @@ private var lakeNode: ModelNode? = null
 private var currentState = -1
 private var onFocusShowcase = false
 private var entered = false
-
 /*
 private val fishNames = listOf(
     "Arowana", "Betta", "Catfish", "Dolphin Fish", "Eel",
@@ -688,6 +688,7 @@ fun FishGrid(fishPairs: List<Pair<Int, String>>, navController: NavController) {
                         .clickable {
                             // Navigate to the fish detail screen with arguments
                             navController.navigate("fishDetail/$fishId")
+
                         }
                 )
             }
@@ -782,7 +783,19 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FishDetailScreen(fishId: Int, navController: NavController, retroViewModel: RetroViewModel) {
-    retroViewModel.getFishInfo(fishId)
+
+    LaunchedEffect(fishId){
+        Log.println(Log.INFO, "FishDetail", "Enter")
+        retroViewModel.retroUiState = RetroUiState.Loading
+        retroViewModel.getFishInfo(fishId)
+    }
+    DisposableEffect(fishId){
+        onDispose {
+            Log.println(Log.INFO, "FishDetail", "Exit")
+            retroViewModel.retroUiState = RetroUiState.Loading
+        }
+    }
+
     val state = retroViewModel.retroUiState
     var name = ""
     var image = ""
@@ -981,7 +994,10 @@ fun MenuScreen(retroViewModel: RetroViewModel, navController: NavController){
 
     Box(modifier = Modifier
         .background(Color(45, 67, 208))
-        .paint(painter = painterResource(id = R.drawable.menuback), contentScale = ContentScale.FillWidth)
+        .paint(
+            painter = painterResource(id = R.drawable.menuback),
+            contentScale = ContentScale.FillWidth
+        )
         .fillMaxSize(),
         contentAlignment = Alignment.Center){
 
