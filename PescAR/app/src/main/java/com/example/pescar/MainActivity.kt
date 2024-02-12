@@ -2,6 +2,7 @@ package com.example.pescar
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -83,16 +84,23 @@ import kotlin.time.DurationUnit
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.ExperimentalMaterial3Api
+
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.draw.scale
@@ -107,9 +115,21 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.gson.JsonObject
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlin.math.pow
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.graphics.vector.ImageVector
+import kotlinx.coroutines.CoroutineStart
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 
 private const val kModelFile = "models/lake_and_fish.glb"
@@ -133,9 +153,6 @@ class MainActivity : ComponentActivity() {
 
     lateinit var retroViewModel: RetroViewModel
 
-    private var isBoxVisible by mutableStateOf(false)
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -149,7 +166,18 @@ class MainActivity : ComponentActivity() {
 
                 composable("arbox") {ARBox(retroViewModel, navController)}
                 composable("showcase") {ShowcaseBox(retroViewModel, navController)}
+
                 composable("menu") { MenuScreen(retroViewModel, navController) }
+
+                composable("fishDetail/{fishId}", arguments = listOf(
+                    navArgument("fishId") { type = NavType.IntType }
+                )) { backStackEntry ->
+                    FishDetailScreen(
+                        fishId = backStackEntry.arguments?.getInt("fishId") ?: 0,
+                        navController = navController,
+                        retroViewModel = retroViewModel
+                    )
+                }
                 composable("test"){TestBox(retroViewModel)}
             }
 
@@ -628,6 +656,73 @@ fun createAnchorNode(
     return anchorNode
 }
 
+/*
+@OptIn(ExperimentalEncodingApi::class)
+fun decodeBase64ToImageBitmap(base64String: String): androidx.compose.ui.graphics.ImageBitmap? {
+    return try {
+        val imageBytes = android.util.Base64.decode(base64String, android.util.Base64.DEFAULT)
+        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+        bitmap.asImageBitmap()
+    } catch (e: Exception) {
+        Log.e("ImageDecoding", "Error decoding base64 image", e)
+        null
+    }
+}*/
+
+@Composable
+fun FishGrid(fishPairs: List<Pair<Int, String>>, navController: NavController) {
+    LazyVerticalGrid(columns = GridCells.Fixed(3), // Set the number of columns here
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        items(fishPairs) { pair ->
+            val fishId = pair.first
+            val imageBitmap = DecodedImage(pair.second)
+            imageBitmap?.let {
+                Image(
+                    bitmap = it,
+                    contentDescription = "Fish ID: $fishId",
+                    modifier = Modifier
+                        .size(128.dp)
+                        .clickable {
+                            // Navigate to the fish detail screen with arguments
+                            navController.navigate("fishDetail/$fishId")
+                        }
+                )
+            }
+        }
+    }
+}
+
+fun convertJsonToPairs(jsonObject: JsonObject): List<Pair<Int, String>> {
+    return jsonObject.entrySet().map { entry ->
+        entry.key.toInt() to entry.value.asString
+    }.sortedBy { it.first }
+}
+
+@Composable
+fun FishGridDisplay(viewModel: RetroViewModel, navController: NavController) {
+    val state = viewModel.retroGridState
+    when (state) {
+        is RetroUiState.Loading -> {
+            // Display a loading indicator
+            Log.println(Log.INFO, "FishGrid", "Loading")
+        }
+
+        is RetroUiState.Success -> {
+            val fishPairs = convertJsonToPairs(state.fishInfo)
+            Log.println(Log.INFO, "FishGrid", fishPairs.toString())
+            FishGrid(fishPairs, navController = navController)
+        }
+
+        is RetroUiState.Error -> {
+            // Display an error message
+            Log.println(Log.INFO, "FishGrid", "Error")
+        }
+    }
+}
+
 @Composable
 fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
 
@@ -675,29 +770,84 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
                 Spacer(modifier = Modifier.height(16.dp))
 
 
-                ////
-                val items = (0..12).toList()
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 128.dp)
-                ) {
-                    items(items) { item ->
-                        // Each item in the grid
-                        Box(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .size(100.dp)
-                                .background(Color.Blue), // Replace with your item content
-                        ) {
-                            // You can place the content of each grid item here
-                        }
-                    }
-                }
-                ////
+                FishGridDisplay(retroViewModel, navController)
 
 
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FishDetailScreen(fishId: Int, navController: NavController, retroViewModel: RetroViewModel) {
+    retroViewModel.getFishInfo(fishId)
+    val state = retroViewModel.retroUiState
+    var name = ""
+    var image = ""
+    var description = ""
+    when (state) {
+        is RetroUiState.Loading -> {
+            // Display a loading indicator
+            Log.println(Log.INFO, "FishDetail", "Loading")
+        }
+
+        is RetroUiState.Success -> {
+            /*
+            name = state.fishInfo.get("name").toString()
+            name = name.substring(1, name.length - 1)
+            image = state.fishInfo.get("image").toString()
+            description = state.fishInfo.get("description").toString()
+            description = description.substring(1, description.length - 1)*/
+            HomeScreen(
+                uiState = retroViewModel.retroUiState,
+                fishCount = retroViewModel.fishCount,
+                false
+            )
+        }
+
+        is RetroUiState.Error -> {
+            // Display an error message
+            Log.println(Log.INFO, "FishDetail", "Error")
+        }
+    }
+
+
+
+    Column {
+        TopAppBar(
+            title = { Text(name) },
+            navigationIcon = {
+                IconButton(onClick = { navController.navigateUp() }) {
+                    Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                }
+            },
+
+        )
+
+        /*
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(text = "Fish ID: $fishId", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            val imageBitmap = decodeBase64ToImageBitmap(image)
+            imageBitmap?.let {
+                Image(
+                    bitmap = it,
+                    contentDescription = "Fish ID: $fishId",
+                    modifier = Modifier
+                        .size(128.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Detail: $description", fontSize = 20.sp)
+        }*/
     }
 }
 
