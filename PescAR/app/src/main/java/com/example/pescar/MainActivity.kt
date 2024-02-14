@@ -539,15 +539,17 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.BottomCenter,
             ) {
-                Button(
-                    onClick = {
-                        currentState = -1
-                        onFocusShowcase = true
-                        navController.navigate("showcase")
-                    },
-                    modifier = Modifier.padding(16.dp)
+                ElevatedButton(onClick = {
+                    currentState = -1
+                    onFocusShowcase = true
+                    navController.navigate("showcase")
+                },
+                    modifier = Modifier.width(150.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255),
+                        contentColor = Color.White),
+                    border = BorderStroke(2.dp,Color(22, 89, 112, 120))
                 ) {
-                    Text(text = "ShowCase")
+                    Text("SHOWCASE",fontWeight = FontWeight.Bold)
                 }
             }
 
