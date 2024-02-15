@@ -3,7 +3,6 @@ package com.example.pescar
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
-import android.graphics.BitmapFactory
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -116,10 +115,7 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.ui.graphics.vector.ImageVector
-import kotlinx.coroutines.CoroutineStart
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
+import androidx.compose.ui.graphics.Brush
 
 
 private const val kModelFile = "models/lake_and_fish.glb"
@@ -777,53 +773,88 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
     // Create a composable box with placeholder text
 
     RetroTestTheme {
-
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .background(Color.White),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Background layer
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Fish Showcase",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f) // Takes up available space
+                    .matchParentSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(Color.White.copy(alpha = 0.4f), Color.White.copy(alpha = 0.6f))
+                        )
                     )
-                    Button(
-                        onClick = {
-                            onFocusShowcase = false
-                            entered = false
-                            navController.popBackStack()
-                        },
-                        modifier = Modifier.padding(8.dp)
+                    .paint(
+                        painter = painterResource(id = R.drawable.showcaseback),
+                        contentScale = ContentScale.FillHeight,
+                        alpha = 0.3f
+                    )
+            )
+
+            // Overlay layer with visual noise or texture (simulated here with a gradient)
+            // In a real app, you might overlay a PNG asset with a noise texture or similar
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(Color.Transparent, Color.White.copy(alpha = 0.2f), Color.Transparent)
+                        )
+                    )
+                    .paint(
+                        painter = painterResource(id = R.drawable.underwater1),
+                        contentScale = ContentScale.FillHeight,
+                        alpha = 0.3f
+                    )
+
+            )
+
+            // Your content here
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "Close")
+                        Text(
+                            text = "Fish Showcase",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f) // Takes up available space
+                        )
+                        Button(
+                            onClick = {
+                                onFocusShowcase = false
+                                entered = false
+                                navController.popBackStack()
+                            },
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            Text(text = "Close")
+                        }
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+
+                    FishGridDisplay(retroViewModel, navController)
+
+
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-
-                FishGridDisplay(retroViewModel, navController)
-
-
-                Spacer(modifier = Modifier.height(16.dp))
             }
         }
+
     }
 }
 
