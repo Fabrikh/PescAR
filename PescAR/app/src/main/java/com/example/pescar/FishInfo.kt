@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -148,12 +149,22 @@ fun LoadingScreen() {
 }
 
 
-val WRITING_BACKGROUND_COLOR = Color(0, 29, 245, 255)
-val TEXT_COLOR = Color(210, 230, 243)
-val BORDER_COLOR = Color(20, 70, 245, 10)
-val CARD_BACKGROUND_COLOR_LIST = listOf(
-    Color(53, 129, 245), Color(20, 100, 245)
+val WRITING_BACKGROUND_COLOR = arrayOf(
+    Color(0, 34, 255, 255),
+    Color(63, 7, 218, 255),
+    Color(255, 132, 0, 255)
 )
+val TEXT_COLOR = Color(255, 255, 255, 255)
+
+
+val BORDER_COLOR = Color(20, 70, 245, 10)
+val CARD_BACKGROUND_COLOR_LIST = arrayOf(
+    listOf(Color(53, 184, 255, 255), Color(0, 85, 255, 255)),
+    listOf(Color(211, 91, 255, 255), Color(89, 0, 255, 255)),
+    listOf(Color(255, 252, 53, 255), Color(255, 170, 0, 255)),
+)
+
+var previewRarity = 3
 
 @Composable
 fun FishInfoCard(
@@ -162,6 +173,7 @@ fun FishInfoCard(
     backSide: Boolean
 ) {
     val cardShape = RoundedCornerShape(8.dp)
+    val cardRarity = fixJsonString(fishInfo.get("rarity").toString()).toInt()
 
     Surface(
         modifier = Modifier
@@ -191,12 +203,10 @@ fun FishInfoCard(
                     Column(
                         modifier = Modifier
                             .background(
-                                Brush.horizontalGradient(
-                                    CARD_BACKGROUND_COLOR_LIST,
-                                    endX = with(LocalDensity.current) {
-                                        50.dp.toPx()
-                                    },
-                                    tileMode = TileMode.Mirror
+                                Brush.linearGradient(
+                                    CARD_BACKGROUND_COLOR_LIST[cardRarity - 1],
+                                    start = Offset(0f, Float.POSITIVE_INFINITY),
+                                    end = Offset(Float.POSITIVE_INFINITY, 0f)
                                 )
                             )
                             .fillMaxHeight()
@@ -206,7 +216,7 @@ fun FishInfoCard(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(WRITING_BACKGROUND_COLOR),
+                                .background(WRITING_BACKGROUND_COLOR[cardRarity - 1]),
                             horizontalArrangement = Arrangement.SpaceBetween,
 
                             ) {
@@ -286,7 +296,7 @@ fun FishInfoCard(
                                     defaultElevation = 10.dp,
                                 ),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = WRITING_BACKGROUND_COLOR,
+                                    containerColor = WRITING_BACKGROUND_COLOR[cardRarity - 1],
                                 ),
                             ) {
                                 Text(
@@ -326,12 +336,15 @@ fun FishInfoCard(
 
                             Card(
                                 border = BorderStroke(10.dp, TEXT_COLOR),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = WRITING_BACKGROUND_COLOR
-                                )) {
+                                ) {
                                 Box(
                                     modifier = Modifier
-                                        .fillMaxSize(),
+                                        .fillMaxSize()
+                                        .background(
+                                            Brush.radialGradient(
+                                                CARD_BACKGROUND_COLOR_LIST[cardRarity - 1]
+                                            )
+                                        ),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Image(
@@ -378,12 +391,18 @@ fun Preview() {
             ) {
                 Column(
                     modifier = Modifier.background(
+                        /*
                         Brush.horizontalGradient(
                             CARD_BACKGROUND_COLOR_LIST,
                             endX = with(LocalDensity.current) {
                                 50.dp.toPx()
                             },
                             tileMode = TileMode.Mirror
+                        )*/
+                        Brush.linearGradient(
+                            CARD_BACKGROUND_COLOR_LIST[previewRarity - 1],
+                            start = Offset(0f, Float.POSITIVE_INFINITY),
+                            end = Offset(Float.POSITIVE_INFINITY, 0f)
                         )
                     )
                 ) {
@@ -391,7 +410,7 @@ fun Preview() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(WRITING_BACKGROUND_COLOR),
+                            .background(WRITING_BACKGROUND_COLOR[previewRarity - 1]),
                         horizontalArrangement = Arrangement.SpaceBetween,
 
                         ) {
@@ -473,7 +492,7 @@ fun Preview() {
                                 defaultElevation = 10.dp,
                             ),
                             colors = CardDefaults.cardColors(
-                                containerColor = WRITING_BACKGROUND_COLOR,
+                                containerColor = WRITING_BACKGROUND_COLOR[previewRarity - 1],
                             ),
                         ) {
                             Text(
@@ -516,7 +535,8 @@ fun Preview2() {
                 // modifier = modifier.size(280.dp, 240.dp)
                 modifier = Modifier
                     .height(460.dp)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                ,
                 border = BorderStroke(2.dp, Color.Black),
                 //set card elevation of the card
                 elevation = CardDefaults.cardElevation(
@@ -528,12 +548,18 @@ fun Preview2() {
 
                 Card(
                     border = BorderStroke(10.dp, TEXT_COLOR),
-                    colors = CardDefaults.cardColors(
-                        containerColor = WRITING_BACKGROUND_COLOR
-                    )) {
+                    modifier = Modifier
+
+                )
+                {
                     Box(
                         modifier = Modifier
-                            .fillMaxSize(),
+                            .fillMaxSize()
+                            .background(
+                                Brush.radialGradient(
+                                    CARD_BACKGROUND_COLOR_LIST[previewRarity - 1]
+                                )
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Image(

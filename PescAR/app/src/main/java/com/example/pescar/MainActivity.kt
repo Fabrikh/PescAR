@@ -2,6 +2,8 @@ package com.example.pescar
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.ActivityInfo
+import android.graphics.BitmapFactory
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -113,6 +115,11 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.graphics.vector.ImageVector
+import kotlinx.coroutines.CoroutineStart
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 
 private const val kModelFile = "models/lake_and_fish.glb"
@@ -150,12 +157,11 @@ object FishPreferences {
 }
 
 class MainActivity : ComponentActivity() {
-
     lateinit var retroViewModel: RetroViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         setContent {
 
             retroViewModel = viewModel()
@@ -555,15 +561,17 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.BottomCenter,
             ) {
-                Button(
-                    onClick = {
-                        currentState = -1
-                        onFocusShowcase = true
-                        navController.navigate("showcase")
-                    },
-                    modifier = Modifier.padding(16.dp)
+                ElevatedButton(onClick = {
+                    currentState = -1
+                    onFocusShowcase = true
+                    navController.navigate("showcase")
+                },
+                    modifier = Modifier.width(150.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255),
+                        contentColor = Color.White),
+                    border = BorderStroke(2.dp,Color(22, 89, 112, 120))
                 ) {
-                    Text(text = "ShowCase")
+                    Text("SHOWCASE",fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -822,7 +830,19 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FishDetailScreen(fishId: Int, navController: NavController, retroViewModel: RetroViewModel) {
-    retroViewModel.getFishInfo(fishId)
+
+    LaunchedEffect(fishId){
+        Log.println(Log.INFO, "FishDetail", "Enter")
+        retroViewModel.retroUiState = RetroUiState.Loading
+        retroViewModel.getFishInfo(fishId)
+    }
+    DisposableEffect(fishId){
+        onDispose {
+            Log.println(Log.INFO, "FishDetail", "Exit")
+            retroViewModel.retroUiState = RetroUiState.Loading
+        }
+    }
+
     val state = retroViewModel.retroUiState
     var name = ""
     var image = ""
