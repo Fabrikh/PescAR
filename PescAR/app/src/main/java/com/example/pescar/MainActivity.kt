@@ -2,7 +2,6 @@ package com.example.pescar
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -16,12 +15,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.EaseOutBounce
 import androidx.compose.animation.core.EaseOutCubic
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -84,52 +78,41 @@ import kotlin.time.DurationUnit
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-
 import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.ExperimentalMaterial3Api
-
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.gson.JsonObject
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlin.math.pow
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBar
-import androidx.compose.ui.graphics.vector.ImageVector
-import kotlinx.coroutines.CoroutineStart
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 
 
 private const val kModelFile = "models/lake_and_fish.glb"
@@ -148,6 +131,23 @@ private val fishNames = listOf(
     "Quillfish", "Rainbow Trout", "Salmon", "Tetra", "Uaru",
     "Viperfish", "Wrasse", "X-ray Tetra", "Yellowtail", "Zebra Danio", "Capybara"
 )*/
+
+object FishPreferences {
+    private const val PREF_NAME = "FishPrefs"
+    private const val FISH_CAUGHT_KEY = "FishCaught"
+
+    fun saveFishCaught(context: Context, fishId: Int) {
+        val sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val existingFish = getCaughtFish(context).toMutableSet()
+        existingFish.add(fishId.toString()) // Keep as string since SharedPreferences stores Set<String>
+        sharedPrefs.edit().putStringSet(FISH_CAUGHT_KEY, existingFish).apply()
+    }
+
+    fun getCaughtFish(context: Context): Set<String> { // Change return type to Set<String>
+        val sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        return sharedPrefs.getStringSet(FISH_CAUGHT_KEY, emptySet()) ?: emptySet()
+    }
+}
 
 class MainActivity : ComponentActivity() {
 
@@ -290,6 +290,22 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
                                     lakeNode!!.playAnimation(animationName = "Idle", loop = true)
                                     currentState = 3
                                     entered = false
+
+                                    val state = retroViewModel.retroUiState
+                                    when (state) {
+                                        is RetroUiState.Loading -> {
+
+                                        }
+
+                                        is RetroUiState.Success -> {
+                                            Log.println(Log.INFO, "Fish", "CAUGHT")
+                                            FishPreferences.saveFishCaught(context, state.fishInfo.get("id").asInt)
+                                        }
+
+                                        is RetroUiState.Error -> {
+
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -668,9 +684,27 @@ fun decodeBase64ToImageBitmap(base64String: String): androidx.compose.ui.graphic
         null
     }
 }*/
+fun Modifier.grayScale(): Modifier {
+    val saturationMatrix = ColorMatrix().apply { setToSaturation(0f) }
+    val saturationFilter = ColorFilter.colorMatrix(saturationMatrix)
+    val paint = Paint().apply { colorFilter = saturationFilter }
+
+    return drawWithCache {
+        val canvasBounds = Rect(Offset.Zero, size)
+        onDrawWithContent {
+            drawIntoCanvas {
+                it.saveLayer(canvasBounds, paint)
+                drawContent()
+                it.restore()
+            }
+        }
+    }
+}
 
 @Composable
 fun FishGrid(fishPairs: List<Pair<Int, String>>, navController: NavController) {
+    val caughtFishIds = FishPreferences.getCaughtFish(LocalContext.current)
+
     LazyVerticalGrid(columns = GridCells.Fixed(3), // Set the number of columns here
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -678,17 +712,23 @@ fun FishGrid(fishPairs: List<Pair<Int, String>>, navController: NavController) {
     ) {
         items(fishPairs) { pair ->
             val fishId = pair.first
+            val isCaught = caughtFishIds.contains(fishId.toString())
             val imageBitmap = DecodedImage(pair.second)
+            // Apply different modifiers based on whether the fish is caught or not
+            val modifier = if (isCaught) {
+                // If caught, make the image clickable with no filter applied
+                Modifier.size(128.dp).clickable {
+                    navController.navigate("fishDetail/$fishId")
+                }
+            } else {
+                // If not caught, apply a grayscale filter and do not make it clickable
+                Modifier.size(128.dp).grayScale()
+            }
             imageBitmap?.let {
                 Image(
                     bitmap = it,
                     contentDescription = "Fish ID: $fishId",
-                    modifier = Modifier
-                        .size(128.dp)
-                        .clickable {
-                            // Navigate to the fish detail screen with arguments
-                            navController.navigate("fishDetail/$fishId")
-                        }
+                    modifier = modifier
                 )
             }
         }
@@ -981,7 +1021,10 @@ fun MenuScreen(retroViewModel: RetroViewModel, navController: NavController){
 
     Box(modifier = Modifier
         .background(Color(45, 67, 208))
-        .paint(painter = painterResource(id = R.drawable.menuback), contentScale = ContentScale.FillWidth)
+        .paint(
+            painter = painterResource(id = R.drawable.menuback),
+            contentScale = ContentScale.FillWidth
+        )
         .fillMaxSize(),
         contentAlignment = Alignment.Center){
 
