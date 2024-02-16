@@ -84,8 +84,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
@@ -106,7 +106,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -676,18 +676,6 @@ fun createAnchorNode(
     return anchorNode
 }
 
-/*
-@OptIn(ExperimentalEncodingApi::class)
-fun decodeBase64ToImageBitmap(base64String: String): androidx.compose.ui.graphics.ImageBitmap? {
-    return try {
-        val imageBytes = android.util.Base64.decode(base64String, android.util.Base64.DEFAULT)
-        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-        bitmap.asImageBitmap()
-    } catch (e: Exception) {
-        Log.e("ImageDecoding", "Error decoding base64 image", e)
-        null
-    }
-}*/
 fun Modifier.grayScale(): Modifier {
     val saturationMatrix = ColorMatrix().apply { setToSaturation(0f) }
     val saturationFilter = ColorFilter.colorMatrix(saturationMatrix)
@@ -712,7 +700,8 @@ fun FishGrid(fishPairs: List<Pair<Int, String>>, navController: NavController) {
     LazyVerticalGrid(columns = GridCells.Fixed(3), // Set the number of columns here
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.padding(bottom = 8.dp)
     ) {
         items(fishPairs) { pair ->
             val fishId = pair.first
@@ -721,12 +710,16 @@ fun FishGrid(fishPairs: List<Pair<Int, String>>, navController: NavController) {
             // Apply different modifiers based on whether the fish is caught or not
             val modifier = if (isCaught) {
                 // If caught, make the image clickable with no filter applied
-                Modifier.size(128.dp).clickable {
-                    navController.navigate("fishDetail/$fishId")
-                }
+                Modifier
+                    .size(128.dp)
+                    .clickable {
+                        navController.navigate("fishDetail/$fishId")
+                    }
             } else {
                 // If not caught, apply a grayscale filter and do not make it clickable
-                Modifier.size(128.dp).grayScale()
+                Modifier
+                    .size(128.dp)
+                    .grayScale()
             }
             imageBitmap?.let {
                 Image(
@@ -767,10 +760,9 @@ fun FishGridDisplay(viewModel: RetroViewModel, navController: NavController) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
-
-    // Create a composable box with placeholder text
 
     RetroTestTheme {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -780,7 +772,10 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
                     .matchParentSize()
                     .background(
                         brush = Brush.verticalGradient(
-                            colors = listOf(Color.White.copy(alpha = 0.4f), Color.White.copy(alpha = 0.6f))
+                            colors = listOf(
+                                Color.White.copy(alpha = 0.4f),
+                                Color.White.copy(alpha = 0.6f)
+                            )
                         )
                     )
                     .paint(
@@ -797,7 +792,11 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
                     .matchParentSize()
                     .background(
                         brush = Brush.radialGradient(
-                            colors = listOf(Color.Transparent, Color.White.copy(alpha = 0.2f), Color.Transparent)
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.White.copy(alpha = 0.2f),
+                                Color.Transparent
+                            )
                         )
                     )
                     .paint(
@@ -811,46 +810,39 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
             // Your content here
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
+                    .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceEvenly
+                        .fillMaxHeight(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Fish Showcase",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f) // Takes up available space
-                        )
-                        Button(
-                            onClick = {
+                    CenterAlignedTopAppBar(
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color(0xAB000000)),
+                        title = {
+                            Text(
+                                text = "Fish Showcase",
+                                fontSize = 30.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = {
                                 onFocusShowcase = false
                                 entered = false
                                 navController.popBackStack()
-                            },
-                            modifier = Modifier.padding(8.dp)
-                        ) {
-                            Text(text = "Close")
+                            }
+                            ) {
+                                Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                            }
                         }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
+                    )
 
                     FishGridDisplay(retroViewModel, navController)
 
-
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }
@@ -874,71 +866,84 @@ fun FishDetailScreen(fishId: Int, navController: NavController, retroViewModel: 
         }
     }
 
-    val state = retroViewModel.retroUiState
-    var name = ""
-    var image = ""
-    var description = ""
-    when (state) {
-        is RetroUiState.Loading -> {
-            // Display a loading indicator
-            Log.println(Log.INFO, "FishDetail", "Loading")
-        }
-
-        is RetroUiState.Success -> {
-            /*
-            name = state.fishInfo.get("name").toString()
-            name = name.substring(1, name.length - 1)
-            image = state.fishInfo.get("image").toString()
-            description = state.fishInfo.get("description").toString()
-            description = description.substring(1, description.length - 1)*/
-            HomeScreen(
-                uiState = retroViewModel.retroUiState,
-                fishCount = retroViewModel.fishCount,
-                false
+    RetroTestTheme {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Background layer
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = 0.4f),
+                                Color.White.copy(alpha = 0.6f)
+                            )
+                        )
+                    )
+                    .paint(
+                        painter = painterResource(id = R.drawable.showcaseback),
+                        contentScale = ContentScale.FillHeight,
+                        alpha = 0.3f
+                    )
             )
-        }
 
-        is RetroUiState.Error -> {
-            // Display an error message
-            Log.println(Log.INFO, "FishDetail", "Error")
-        }
-    }
+            // Overlay layer with visual noise or texture (simulated here with a gradient)
+            // In a real app, you might overlay a PNG asset with a noise texture or similar
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.White.copy(alpha = 0.2f),
+                                Color.Transparent
+                            )
+                        )
+                    )
+                    .paint(
+                        painter = painterResource(id = R.drawable.underwater1),
+                        contentScale = ContentScale.FillHeight,
+                        alpha = 0.3f
+                    )
 
+            )
 
-
-    Column {
-        TopAppBar(
-            title = { Text(name) },
-            navigationIcon = {
-                IconButton(onClick = { navController.navigateUp() }) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-                }
-            },
-
-        )
-
-        /*
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(text = "Fish ID: $fishId", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(8.dp))
-            val imageBitmap = decodeBase64ToImageBitmap(image)
-            imageBitmap?.let {
-                Image(
-                    bitmap = it,
-                    contentDescription = "Fish ID: $fishId",
-                    modifier = Modifier
-                        .size(128.dp)
+            // Your content here
+            Column {
+                CenterAlignedTopAppBar(
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color(0xAB000000)),
+                    title = { Text("") },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.navigateUp() }) {
+                            Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        }
+                    },
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "Detail: $description", fontSize = 20.sp)
-        }*/
+
+            val state = retroViewModel.retroUiState
+            when (state) {
+                is RetroUiState.Loading -> {
+                    // Display a loading indicator
+                    Log.println(Log.INFO, "FishDetail", "Loading")
+                }
+
+                is RetroUiState.Success -> {
+                    HomeScreen(
+                        uiState = retroViewModel.retroUiState,
+                        fishCount = retroViewModel.fishCount,
+                        false
+                    )
+                }
+
+                is RetroUiState.Error -> {
+                    // Display an error message
+                    Log.println(Log.INFO, "FishDetail", "Error")
+                }
+            }
+        }
+
     }
 }
 
