@@ -7,6 +7,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -116,6 +117,8 @@ import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.graphics.Brush
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 
 private const val kModelFile = "models/lake_and_fish.glb"
@@ -125,6 +128,8 @@ private var lakeNode: ModelNode? = null
 private var currentState = -1
 private var onFocusShowcase = false
 private var entered = false
+
+
 
 /*
 private val fishNames = listOf(
@@ -154,22 +159,30 @@ object FishPreferences {
 
 class MainActivity : ComponentActivity() {
     lateinit var retroViewModel: RetroViewModel
-
+    lateinit var mediaPlayer: MediaPlayer
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
+        mediaPlayer = MediaPlayer.create(this, R.raw.soundtrack)
+        mediaPlayer?.isLooping = true // Riproduzione in loop
+        mediaPlayer?.start()
+
         setContent {
 
             retroViewModel = viewModel()
 
             val navController = rememberNavController()
+            val buttonMediaPlayer = MediaPlayer.create(LocalContext.current, R.raw.buttoncut)
+
+
 
             NavHost(navController, startDestination = "menu") {
 
-                composable("arbox") {ARBox(retroViewModel, navController)}
-                composable("showcase") {ShowcaseBox(retroViewModel, navController)}
+                composable("arbox") {ARBox(retroViewModel, navController, buttonMediaPlayer)}
+                composable("showcase") {ShowcaseBox(retroViewModel, navController, buttonMediaPlayer)}
 
-                composable("menu") { MenuScreen(retroViewModel, navController) }
+                composable("menu") { MenuScreen(retroViewModel, navController, buttonMediaPlayer) }
 
                 composable("fishDetail/{fishId}", arguments = listOf(
                     navArgument("fishId") { type = NavType.IntType }
@@ -180,7 +193,7 @@ class MainActivity : ComponentActivity() {
                         retroViewModel = retroViewModel
                     )
                 }
-                composable("test"){TestBox(retroViewModel)}
+                //composable("test"){TestBox(retroViewModel)}
             }
 
 
@@ -193,12 +206,31 @@ class MainActivity : ComponentActivity() {
 
         }
     }
+    override fun onPause() {
+        super.onPause()
+        mediaPlayer?.pause() // Mette in pausa la riproduzione quando l'app è in pausa
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mediaPlayer?.start() // Riprende la riproduzione quando l'app riprende
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mediaPlayer?.release() // Rilascia le risorse quando l'app viene distrutta
+    }
 }
 
 
 @Composable
-fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
+fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMediaPlayer: MediaPlayer) {
+
+    val mContext = LocalContext.current
+    val castMediaPlayer = MediaPlayer.create(mContext, R.raw.cast)
+    val reelinMediaPlayer = MediaPlayer.create(mContext, R.raw.reelin)
     currentState = -1
+
     RetroTestTheme {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -268,6 +300,7 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
                                     entered = true
                                     lakeNode!!.stopAnimation(animationName = "NoHook")
                                     lakeNode!!.playAnimation(animationName = "HookIdle", loop = true)
+                                    castMediaPlayer.start()
                                     retroViewModel.getFishInfo(0)
                                     Log.println(Log.INFO,"Fish","done")
 
@@ -290,6 +323,7 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
                                     lakeNode!!.stopAnimation(animationName = "FishHooking")
                                     lakeNode!!.playAnimation(animationName = "NoHook", loop = true)
                                     lakeNode!!.playAnimation(animationName = "Idle", loop = true)
+                                    reelinMediaPlayer.start()
                                     currentState = 3
                                     entered = false
 
@@ -460,7 +494,9 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
                                         materialLoader = materialLoader,
                                         modelInstances = modelInstances,
                                         anchor = anchor,
-                                        retroViewModel = retroViewModel
+                                        retroViewModel = retroViewModel,
+                                        castMediaPlayer,
+                                        reelinMediaPlayer
                                     )
 
                                 }
@@ -560,6 +596,8 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController) {
                 ElevatedButton(onClick = {
                     currentState = -1
                     onFocusShowcase = true
+                    buttonMediaPlayer.start()
+
                     navController.navigate("showcase")
                 },
                     modifier = Modifier.width(150.dp),
@@ -590,7 +628,9 @@ fun createAnchorNode(
     materialLoader: MaterialLoader,
     modelInstances: MutableList<ModelInstance>,
     anchor: Anchor,
-    retroViewModel: RetroViewModel
+    retroViewModel: RetroViewModel,
+    castMediaPlayer: MediaPlayer,
+    reelinMediaPlayer: MediaPlayer,
 ): AnchorNode {
 
     val anchorNode = AnchorNode(engine = engine, anchor = anchor)
@@ -613,7 +653,9 @@ fun createAnchorNode(
                 if(currentState == 0 && !entered) {
                     entered = true
                     this.stopAnimation(animationName = "NoHook")
+
                     this.playAnimation(animationName = "HookIdle", loop = true)
+                    castMediaPlayer.start()
 
                     //this.playAnimation(animationName = "HookIdle", loop = true)
                     retroViewModel.getFishInfo(0)
@@ -635,8 +677,10 @@ fun createAnchorNode(
                 entered = true
                 this.stopAnimation(animationName = "Catch")
                 this.stopAnimation(animationName = "FishHooking")
+
                 this.playAnimation(animationName = "NoHook", loop = true)
                 this.playAnimation(animationName = "Idle", loop = true)
+                reelinMediaPlayer.start()
                 currentState = 3
                 entered = false
             }
@@ -694,7 +738,7 @@ fun Modifier.grayScale(): Modifier {
 }
 
 @Composable
-fun FishGrid(fishPairs: List<Pair<Int, String>>, navController: NavController) {
+fun FishGrid(fishPairs: List<Pair<Int, String>>, navController: NavController, buttonMediaPlayer: MediaPlayer) {
     val caughtFishIds = FishPreferences.getCaughtFish(LocalContext.current)
 
     LazyVerticalGrid(columns = GridCells.Fixed(3), // Set the number of columns here
@@ -713,6 +757,7 @@ fun FishGrid(fishPairs: List<Pair<Int, String>>, navController: NavController) {
                 Modifier
                     .size(128.dp)
                     .clickable {
+                        buttonMediaPlayer.start()
                         navController.navigate("fishDetail/$fishId")
                     }
             } else {
@@ -739,7 +784,7 @@ fun convertJsonToPairs(jsonObject: JsonObject): List<Pair<Int, String>> {
 }
 
 @Composable
-fun FishGridDisplay(viewModel: RetroViewModel, navController: NavController) {
+fun FishGridDisplay(viewModel: RetroViewModel, navController: NavController, buttonMediaPlayer: MediaPlayer) {
     val state = viewModel.retroGridState
     when (state) {
         is RetroUiState.Loading -> {
@@ -750,7 +795,7 @@ fun FishGridDisplay(viewModel: RetroViewModel, navController: NavController) {
         is RetroUiState.Success -> {
             val fishPairs = convertJsonToPairs(state.fishInfo)
             Log.println(Log.INFO, "FishGrid", fishPairs.toString())
-            FishGrid(fishPairs, navController = navController)
+            FishGrid(fishPairs, navController = navController, buttonMediaPlayer = buttonMediaPlayer)
         }
 
         is RetroUiState.Error -> {
@@ -762,7 +807,7 @@ fun FishGridDisplay(viewModel: RetroViewModel, navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
+fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController, buttonMediaPlayer: MediaPlayer){
 
     RetroTestTheme {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -841,7 +886,7 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController){
                         }
                     )
 
-                    FishGridDisplay(retroViewModel, navController)
+                    FishGridDisplay(retroViewModel, navController, buttonMediaPlayer)
 
                 }
             }
@@ -961,14 +1006,17 @@ fun TestBox(retroViewModel: RetroViewModel){
     val rotateYAnimation = remember { Animatable(180f) }
     val yAnimation = remember { Animatable(-1.5f) }
 
+    val cardMediaPlayer = MediaPlayer.create(LocalContext.current, R.raw.card)
+
     when(retroViewModel.retroUiState){
         is RetroUiState.Success -> {
             LaunchedEffect("animationKey") {
 
+
                 yAnimation.animateTo(0f, animationSpec = tween(durationMillis = 1000, easing = EaseOutCubic))
                 rotateYAnimation.animateTo(0f, animationSpec = tween(durationMillis = 1000 ,easing = CubicBezierEasing(0.0f, 0.42f, 1.0f, 0.58f)))
                 scaleAnimation.animateTo(1.0f)
-
+                cardMediaPlayer.start()
             }
         }
 
@@ -1072,7 +1120,7 @@ fun FlipCard(
 }
 
 @Composable
-fun MenuScreen(retroViewModel: RetroViewModel, navController: NavController){
+fun MenuScreen(retroViewModel: RetroViewModel, navController: NavController, buttonMediaPlayer: MediaPlayer){
 
 
     Box(modifier = Modifier
@@ -1093,14 +1141,20 @@ fun MenuScreen(retroViewModel: RetroViewModel, navController: NavController){
 
             Spacer(modifier = Modifier.height(200.dp))
 
-            ElevatedButton(onClick = {navController.navigate("arbox")},
+            ElevatedButton(onClick = {
+                navController.navigate("arbox")
+                buttonMediaPlayer.start()
+                                     },
                 modifier = Modifier.width(150.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255)),
                 border = BorderStroke(2.dp,Color(22, 89, 112, 120))
             ) {
                 Text("START",fontWeight = FontWeight.Bold)
             }
-            ElevatedButton(onClick = {navController.navigate("showcase")},
+            ElevatedButton(onClick = {
+                navController.navigate("showcase")
+                buttonMediaPlayer.start()
+                                     },
                 modifier = Modifier.width(150.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255)),
                 border = BorderStroke(2.dp,Color(22, 89, 112, 120))
