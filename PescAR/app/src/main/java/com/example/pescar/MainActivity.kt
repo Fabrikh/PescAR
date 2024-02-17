@@ -8,8 +8,11 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.media.MediaPlayer
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.util.Log
 import android.view.MotionEvent
 import androidx.activity.ComponentActivity
@@ -356,6 +359,22 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                 sensorManager?.registerListener(sensorEventListener, gyroscope, SensorManager.SENSOR_DELAY_NORMAL)
             }
 
+            fun triggerVibration() {
+                val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator?
+
+                // Check if the device has a vibrator
+                if (vibrator != null && vibrator.hasVibrator()) {
+                    // Vibrate for 500 milliseconds
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        val vibrationEffect = VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
+                        vibrator.vibrate(vibrationEffect)
+                    } else {
+                        // For older devices without vibration effect support
+                        vibrator.vibrate(500)
+                    }
+                }
+            }
+
             ARScene(
                 modifier = Modifier.fillMaxSize(),
                 childNodes = childNodes,
@@ -460,6 +479,7 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                             lakeNode!!.playAnimation(animationName = "Catch", loop = true)
                             Log.println(Log.INFO, "MyApp", "RetroViewModel Success")
                             currentState = 2
+                            triggerVibration()
                         }
 
                     if (internalState != currentState)
