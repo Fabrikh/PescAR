@@ -516,7 +516,8 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                                         anchor = anchor,
                                         retroViewModel = retroViewModel,
                                         castMediaPlayer,
-                                        reelinMediaPlayer
+                                        reelinMediaPlayer,
+                                        context = context
                                     )
 
                                 }
@@ -651,6 +652,7 @@ fun createAnchorNode(
     retroViewModel: RetroViewModel,
     castMediaPlayer: MediaPlayer,
     reelinMediaPlayer: MediaPlayer,
+    context: Context
 ): AnchorNode {
 
     val anchorNode = AnchorNode(engine = engine, anchor = anchor)
@@ -703,6 +705,21 @@ fun createAnchorNode(
                 reelinMediaPlayer.start()
                 currentState = 3
                 entered = false
+                val state = retroViewModel.retroUiState
+                when (state) {
+                    is RetroUiState.Loading -> {
+
+                    }
+
+                    is RetroUiState.Success -> {
+                        Log.println(Log.INFO, "Fish", "CAUGHT")
+                        FishPreferences.saveFishCaught(context, state.fishInfo.get("id").asInt)
+                    }
+
+                    is RetroUiState.Error -> {
+
+                    }
+                }
             }
             true
         }
