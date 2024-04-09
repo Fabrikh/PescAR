@@ -7,7 +7,7 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 private const val BASE_URL =
-    "https://pawgab.pythonanywhere.com"
+    "https://pawgab2.pythonanywhere.com"
     //"http://10.0.2.2:5000"
 
 private val retrofit = Retrofit.Builder()
@@ -23,7 +23,7 @@ object RetroAPI{
 
 interface RetroAPIService {
     @GET("/")
-    suspend fun getFishInfo(@Query("id") id: Int): JsonObject
+    suspend fun getFishInfo(@Query("id") id: Int,@Query("difficulty") difficulty: Int): JsonObject
 
     @GET("/fishcount")
     suspend fun getFishCount(): String

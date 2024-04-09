@@ -41,6 +41,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pescar.ui.theme.RetroTestTheme
 import com.google.gson.JsonObject
 
+/*
 @Composable
 fun RetroApp(
     retroViewModel: RetroViewModel = viewModel()
@@ -83,7 +84,7 @@ fun RetroApp(
             }
         }
     }
-}
+}*/
 
 @Composable
 fun HomeScreen(
@@ -229,7 +230,7 @@ fun FishInfoCard(
                             Text(
                                 text = fixJsonString(
                                     fishInfo.get("id").toString()
-                                ) + "/" + fishCount.toString(),
+                                ) + "/" + (fishCount-1).toString(),
                                 style = MaterialTheme.typography.headlineMedium,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,

@@ -32,10 +32,10 @@ class RetroViewModel : ViewModel() {
         getFishGrid()
     }
 
-    fun getFishInfo(id :Int) {
+    fun getFishInfo(id :Int, difficulty :Int) {
         viewModelScope.launch {
             retroUiState = try {
-                val jsonResult = RetroAPI.retrofitService.getFishInfo(id)
+                val jsonResult = RetroAPI.retrofitService.getFishInfo(id,difficulty)
                 RetroUiState.Success(jsonResult)
             }catch (e: IOException){
 

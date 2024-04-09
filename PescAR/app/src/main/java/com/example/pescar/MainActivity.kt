@@ -132,16 +132,7 @@ private var currentState = -1
 private var onFocusShowcase = false
 private var entered = false
 
-
-
-/*
-private val fishNames = listOf(
-    "Arowana", "Betta", "Catfish", "Dolphin Fish", "Eel",
-    "Flounder", "Guppy", "Haddock", "Ichthyosaur", "Jellyfish",
-    "Koi", "Lionfish", "Mackerel", "Nemo", "Octopus", "Piranha",
-    "Quillfish", "Rainbow Trout", "Salmon", "Tetra", "Uaru",
-    "Viperfish", "Wrasse", "X-ray Tetra", "Yellowtail", "Zebra Danio", "Capybara"
-)*/
+private var DIFFICULTY = 1 // 0: Easy, 1: Medium, 2: Hard
 
 object FishPreferences {
     private const val PREF_NAME = "FishPrefs"
@@ -199,13 +190,6 @@ class MainActivity : ComponentActivity() {
                 //composable("test"){TestBox(retroViewModel)}
             }
 
-
-                //ARBox(retroViewModel)
-
-                // A surface container using the 'background' color from the theme
-                // Add a button to open the box when clicked
-
-                //ShowcaseBox(retroViewModel)
 
         }
     }
@@ -304,7 +288,7 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                                     lakeNode!!.stopAnimation(animationName = "NoHook")
                                     lakeNode!!.playAnimation(animationName = "HookIdle", loop = true)
                                     castMediaPlayer.start()
-                                    retroViewModel.getFishInfo(0)
+                                    retroViewModel.getFishInfo(-1, DIFFICULTY)
                                     Log.println(Log.INFO,"Fish","done")
 
                                     var waitTheCatch = Random.nextInt(500, 3501)
@@ -680,7 +664,7 @@ fun createAnchorNode(
                     castMediaPlayer.start()
 
                     //this.playAnimation(animationName = "HookIdle", loop = true)
-                    retroViewModel.getFishInfo(0)
+                    retroViewModel.getFishInfo(-1, DIFFICULTY)
                     Log.println(Log.INFO,"Fish","done")
 
                     var waitTheCatch = Random.nextInt(500, 3501)
@@ -939,7 +923,7 @@ fun FishDetailScreen(fishId: Int, navController: NavController, retroViewModel: 
     LaunchedEffect(fishId){
         Log.println(Log.INFO, "FishDetail", "Enter")
         retroViewModel.retroUiState = RetroUiState.Loading
-        retroViewModel.getFishInfo(fishId)
+        retroViewModel.getFishInfo(fishId, DIFFICULTY)
     }
     DisposableEffect(fishId){
         onDispose {
@@ -1036,8 +1020,6 @@ fun TestBox(retroViewModel: RetroViewModel){
     val configuration = LocalConfiguration.current
 
     val screenHeight = configuration.screenHeightDp.dp
-
-    //retroViewModel.getFishInfo(1)
 
     val scaleAnimation = remember { Animatable(0.5f) }
     val rotateYAnimation = remember { Animatable(180f) }
