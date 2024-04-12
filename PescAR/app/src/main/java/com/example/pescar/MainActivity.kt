@@ -81,9 +81,11 @@ import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
@@ -119,6 +121,7 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -130,6 +133,7 @@ private const val kMaxModelInstances = 1
 private var lakeNode: ModelNode? = null
 private var currentState = -1
 private var onFocusShowcase = false
+
 private var entered = false
 
 private var DIFFICULTY = 1 // 0: Easy, 1: Medium, 2: Hard
@@ -594,9 +598,27 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                 }
             )
 
+
+            var onFocusBaits by remember { mutableStateOf(false) }
+
+            if(onFocusBaits){
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        //.then(if (!onFocusBaits) Modifier.alpha(0f) else Modifier.alpha(1f))
+                        .clickable { onFocusBaits=false }
+
+                    ,
+                    contentAlignment = Alignment.Center,
+                ) {
+                    BaitGrid(onFocusBaits)
+                }
+            }
+
+
             Box(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.BottomCenter,
+                contentAlignment = Alignment.BottomStart,
             ) {
                 ElevatedButton(onClick = {
                     currentState = -1
@@ -611,6 +633,22 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                     border = BorderStroke(2.dp,Color(22, 89, 112, 120))
                 ) {
                     Text("SHOWCASE",fontWeight = FontWeight.Bold)
+                }
+            }
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.BottomEnd,
+            ) {
+                ElevatedButton(onClick = {
+                    onFocusBaits = !onFocusBaits
+                    buttonMediaPlayer.start()
+                },
+                    modifier = Modifier.width(150.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255),
+                        contentColor = Color.White),
+                    border = BorderStroke(2.dp,Color(22, 89, 112, 120))
+                ) {
+                    Text("BAITS",fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -1185,7 +1223,6 @@ fun MenuScreen(retroViewModel: RetroViewModel, navController: NavController, but
 
 }
 
-@Preview(showBackground = true)
 @Composable
 fun Menu(){
 
@@ -1216,4 +1253,80 @@ fun Menu(){
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true)
+@Composable
+fun BaitGrid(focus: Boolean){
+
+    val baits = (1..4).toList()
+    var selectedBoxIndex by remember { mutableStateOf(-1) }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .size(LocalConfiguration.current.screenWidthDp.dp * 0.8f,
+                LocalConfiguration.current.screenHeightDp.dp * 0.5f)
+        ,
+    ) {
+        CenterAlignedTopAppBar(
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = Color(0xE2383838)
+            ),
+            title = {
+                Text(
+                    text = "Baits",
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                )
+            }
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                horizontalArrangement = Arrangement.Center,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .padding(0.dp)
+                    .background(Color(52, 54, 66, 255))
+                    .fillMaxSize()
+            ) {
+                items(baits) { bait ->
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .background(
+                                if (bait.toInt() == selectedBoxIndex) Color.White else Color.Gray
+                            )
+                            .clickable {
+                                selectedBoxIndex = bait.toInt()
+                            }
+                            .border(1.dp, color = Color(96, 119, 128, 255))
+                            //.fillMaxSize()
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.test),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .aspectRatio(1f), // Mantieni l'aspect ratio dell'immagine
+                            contentScale = ContentScale.Fit
+
+                        )
+                    }
+
+
+                }
+            }
+        }
+    }
+
+    //Image(painter = painterResource(id = R.drawable.test), contentDescription = null,)
 }
