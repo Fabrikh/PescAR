@@ -648,7 +648,7 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                         contentColor = Color.White),
                     border = BorderStroke(2.dp,Color(22, 89, 112, 120))
                 ) {
-                    Text("BAITS",fontWeight = FontWeight.Bold)
+                    Text("LURES",fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -1276,7 +1276,7 @@ fun BaitGrid(focus: Boolean){
             ),
             title = {
                 Text(
-                    text = "Baits",
+                    text = "Lures",
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
@@ -1312,7 +1312,7 @@ fun BaitGrid(focus: Boolean){
                             //.fillMaxSize()
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.test),
+                            painter = painterResource(id = LocalContext.current.resources.getIdentifier("lure"+bait,"drawable", LocalContext.current.packageName)),
                             contentDescription = null,
                             modifier = Modifier
                                 .fillMaxSize()
