@@ -13,7 +13,9 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.LayoutDirection
 import android.util.Log
+import android.util.Size
 import android.view.MotionEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -85,7 +87,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
@@ -123,8 +124,11 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Density
+import kotlin.io.path.Path
+import kotlin.io.path.moveTo
 
 
 private const val kModelFile = "models/lake_and_fish.glb"
@@ -141,6 +145,7 @@ private var DIFFICULTY = 1 // 0: Easy, 1: Medium, 2: Hard
 object FishPreferences {
     private const val PREF_NAME = "FishPrefs"
     private const val FISH_CAUGHT_KEY = "FishCaught"
+    private const val LURE_KEY = "Lure"
 
     fun saveFishCaught(context: Context, fishId: Int) {
         val sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -153,11 +158,22 @@ object FishPreferences {
         val sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         return sharedPrefs.getStringSet(FISH_CAUGHT_KEY, emptySet()) ?: emptySet()
     }
+
+    fun saveLure(context: Context, lureId: Int){
+        val sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        sharedPrefs.edit().putInt(LURE_KEY, lureId).apply()
+    }
+
+    fun getLure(context: Context): Int {
+        val sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        return sharedPrefs.getInt(LURE_KEY, 1)
+    }
 }
 
 class MainActivity : ComponentActivity() {
     lateinit var retroViewModel: RetroViewModel
     lateinit var mediaPlayer: MediaPlayer
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -601,19 +617,24 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
 
             var onFocusBaits by remember { mutableStateOf(false) }
 
+            fun closeBaitGrid(){
+                onFocusBaits = !onFocusBaits
+            }
+
             if(onFocusBaits){
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         //.then(if (!onFocusBaits) Modifier.alpha(0f) else Modifier.alpha(1f))
-                        .clickable { onFocusBaits=false }
+                        .clickable { onFocusBaits = false }
 
                     ,
                     contentAlignment = Alignment.Center,
                 ) {
-                    BaitGrid(onFocusBaits)
+                    BaitGrid(onFocusBaits, context) { closeBaitGrid() }
                 }
             }
+
 
 
             Box(
@@ -635,6 +656,29 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                     Text("MY COLLECTION",fontWeight = FontWeight.Bold)
                 }
             }
+
+            class QuarterCircleShape : Shape {
+                override fun createOutline(
+                    size: androidx.compose.ui.geometry.Size,
+                    layoutDirection: androidx.compose.ui.unit.LayoutDirection,
+                    density: Density
+                ): Outline {
+                    val path = androidx.compose.ui.graphics.Path().apply {
+                        moveTo(0f, size.height)
+                        arcTo(
+                            rect = Rect(0f, 0f, size.width * 2, size.height * 2),
+                            startAngleDegrees = 180f,
+                            sweepAngleDegrees = 90f,
+                            forceMoveTo = false
+                        )
+                        lineTo(size.width, size.height)
+
+                        close()
+                    }
+                    return Outline.Generic(path)
+                }
+            }
+
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.BottomEnd,
@@ -643,12 +687,34 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                     onFocusBaits = !onFocusBaits
                     buttonMediaPlayer.start()
                 },
-                    modifier = Modifier.width(180.dp),
+                    modifier = Modifier.width(130.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255),
                         contentColor = Color.White),
-                    border = BorderStroke(2.dp,Color(22, 89, 112, 120))
+                    border = BorderStroke(2.dp,Color(22, 89, 112, 120)),
+                    shape = QuarterCircleShape()
                 ) {
-                    Text("LURES",fontWeight = FontWeight.Bold)
+                    //Text("LURES" + " " + FishPreferences.getLure(mContext).toString(),fontWeight = FontWeight.Bold)
+                    Column(
+                        modifier = Modifier,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(
+                                id = mContext.resources.getIdentifier(
+                                    "lure" +
+                                            FishPreferences.getLure(mContext).toString(),
+                                    "drawable",
+                                    mContext.packageName
+                                )
+                            ),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .aspectRatio(1f), // Mantieni l'aspect ratio dell'immagine
+                            contentScale = ContentScale.Fit
+
+                        )
+                        Text("LURES", fontWeight = FontWeight.Bold)
+                    }
                 }
             }
 
@@ -663,6 +729,8 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
 
 
 }
+
+
 
 
 fun createAnchorNode(
@@ -1227,10 +1295,10 @@ fun MenuScreen(retroViewModel: RetroViewModel, navController: NavController, but
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
-fun BaitGrid(focus: Boolean){
+fun BaitGrid(focus: Boolean, context: Context, closeBaitGrid: () -> Unit){
 
     val baits = (1..4).toList()
-    var selectedBoxIndex by remember { mutableStateOf(-1) }
+    var selectedBait = -1
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -1266,16 +1334,19 @@ fun BaitGrid(focus: Boolean){
                     .padding(0.dp)
                     .background(Color(52, 54, 66, 255))
                     .fillMaxSize()
+                    .alpha(1f)
             ) {
                 items(baits) { bait ->
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .background(
-                                if (bait.toInt() == selectedBoxIndex) Color.White else Color.Gray
+                                Color.Gray
                             )
                             .clickable {
-                                selectedBoxIndex = bait.toInt()
+                                selectedBait = bait.toInt()
+                                FishPreferences.saveLure(context, selectedBait)
+                                closeBaitGrid()
                             }
                             .border(1.dp, color = Color(96, 119, 128, 255))
                             //.fillMaxSize()
