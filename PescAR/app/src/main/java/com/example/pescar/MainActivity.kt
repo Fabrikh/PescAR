@@ -627,12 +627,12 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
 
                     navController.navigate("showcase")
                 },
-                    modifier = Modifier.width(150.dp),
+                    modifier = Modifier.width(180.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255),
                         contentColor = Color.White),
                     border = BorderStroke(2.dp,Color(22, 89, 112, 120))
                 ) {
-                    Text("SHOWCASE",fontWeight = FontWeight.Bold)
+                    Text("MY COLLECTION",fontWeight = FontWeight.Bold)
                 }
             }
             Box(
@@ -643,7 +643,7 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                     onFocusBaits = !onFocusBaits
                     buttonMediaPlayer.start()
                 },
-                    modifier = Modifier.width(150.dp),
+                    modifier = Modifier.width(180.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255),
                         contentColor = Color.White),
                     border = BorderStroke(2.dp,Color(22, 89, 112, 120))
@@ -927,7 +927,7 @@ fun ShowcaseBox(retroViewModel: RetroViewModel, navController: NavController, bu
                         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color(0xAB000000)),
                         title = {
                             Text(
-                                text = "Fish Showcase",
+                                text = "Fish Collection",
                                 fontSize = 30.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
@@ -1202,7 +1202,7 @@ fun MenuScreen(retroViewModel: RetroViewModel, navController: NavController, but
                 navController.navigate("arbox")
                 buttonMediaPlayer.start()
                                      },
-                modifier = Modifier.width(150.dp),
+                modifier = Modifier.width(180.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255)),
                 border = BorderStroke(2.dp,Color(22, 89, 112, 120))
             ) {
@@ -1212,48 +1212,17 @@ fun MenuScreen(retroViewModel: RetroViewModel, navController: NavController, but
                 navController.navigate("showcase")
                 buttonMediaPlayer.start()
                                      },
-                modifier = Modifier.width(150.dp),
+                modifier = Modifier.width(180.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255)),
                 border = BorderStroke(2.dp,Color(22, 89, 112, 120))
             ) {
-                Text("SHOWCASE",fontWeight = FontWeight.Bold)
+                Text("MY COLLECTION",fontWeight = FontWeight.Bold)
             }
         }
     }
 
 }
 
-@Composable
-fun Menu(){
-
-    Box(modifier = Modifier
-        .background(Color(45, 67, 208))
-        .fillMaxSize(),
-        contentAlignment = Alignment.Center){
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceEvenly
-        ) {
-
-            Image(painter = painterResource(id = R.drawable.logoname), contentDescription = null,)
-
-            Spacer(modifier = Modifier.height(50.dp))
-
-            ElevatedButton(onClick = {},
-                modifier = Modifier.width(150.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(129, 144, 240, 255))
-            ) {
-                Text("Start")
-            }
-            ElevatedButton(onClick = {},
-                modifier = Modifier.width(150.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(129, 144, 240, 255))) {
-                Text("Showcase")
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
