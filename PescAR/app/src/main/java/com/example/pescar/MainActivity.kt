@@ -578,8 +578,10 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                         //var randomFish = fishNames[Random.nextInt(fishNames.size)]
                         //"Congratulations! You have caught a $randomFish"
 
-                        when (retroViewModel.retroUiState) {
+                        when (val state = retroViewModel.retroUiState) {
                             is RetroUiState.Success -> {
+
+                                val fishId = state.fishInfo.get("id").asInt
 
                                 Box(
                                     contentAlignment = Alignment.Center,
@@ -598,8 +600,12 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                                         fishCount = retroViewModel.fishCount,
                                         false
                                     )*/
-                                    
-                                    TestBox(retroViewModel = retroViewModel)
+                                    Box(modifier = Modifier
+                                        .height(460.dp)
+                                        .clickable { navController.navigate("fishDetail/$fishId") }
+                                    ){
+                                        TestBox(retroViewModel = retroViewModel)
+                                    }
 
                                 }
 
