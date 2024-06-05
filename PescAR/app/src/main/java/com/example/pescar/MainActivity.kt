@@ -3,6 +3,7 @@ package com.example.pescar
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.content.res.Resources
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -10,6 +11,7 @@ import android.hardware.SensorManager
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
+import android.os.Debug
 import android.os.Handler
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -89,6 +91,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ButtonDefaults
@@ -122,11 +125,19 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import kotlin.io.path.Path
 import kotlin.io.path.moveTo
 
@@ -237,6 +248,8 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
     val castMediaPlayer = MediaPlayer.create(mContext, R.raw.cast)
     val reelinMediaPlayer = MediaPlayer.create(mContext, R.raw.reelin)
     currentState = -1
+
+    Log.println(Log.INFO,"SAVEDLURE", FishPreferences.getLure(mContext).toString())
 
     RetroTestTheme {
         Box(
@@ -637,7 +650,7 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                     ,
                     contentAlignment = Alignment.Center,
                 ) {
-                    BaitGrid(onFocusBaits, context) { closeBaitGrid() }
+                    BaitGrid(onFocusBaits, context, { closeBaitGrid() }, buttonMediaPlayer)
                 }
             }
 
@@ -699,7 +712,6 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                     border = BorderStroke(2.dp,Color(22, 89, 112, 120)),
                     shape = QuarterCircleShape()
                 ) {
-                    //Text("LURES" + " " + FishPreferences.getLure(mContext).toString(),fontWeight = FontWeight.Bold)
                     Column(
                         modifier = Modifier,
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -1297,17 +1309,186 @@ fun MenuScreen(retroViewModel: RetroViewModel, navController: NavController, but
 
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
-fun BaitGrid(focus: Boolean, context: Context, closeBaitGrid: () -> Unit){
+fun PreviewTest() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .size(
+                LocalConfiguration.current.screenWidthDp.dp * 0.8f,
+                LocalConfiguration.current.screenHeightDp.dp * 0.5f
+            ),
+    ) {
+        CenterAlignedTopAppBar(
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = Color(0xE2383838)
+            ),
+            title = {
+                Text(
+                    text = "Lures",
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                )
+            }
+        )
+        Test()
+    }
+}
+@Composable
+fun Test(){
+
+
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .background(
+                    Color.Gray
+                )
+                .padding(10.dp)
+
+                //.border(1.dp, color = Color(96, 119, 128, 255))
+                .fillMaxSize()
+        ) {
+
+            Column (
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ){
+
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                ) {
+                    val maxHeight = constraints.maxHeight
+                    val maxWidth = constraints.maxWidth
+
+                    Image(
+                        painter = painterResource(
+                            id = LocalContext.current.resources.getIdentifier(
+                                "lure1",
+                                "drawable",
+                                LocalContext.current.packageName
+                            )
+                        ),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(
+                                minOf(maxWidth, maxHeight).dp * 0.5f
+                            )
+                            .aspectRatio(1f), // Mantieni l'aspect ratio dell'immagine
+                        contentScale = ContentScale.Fit
+                    )
+                }
+
+                Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally){
+                    Text("Nome esca", fontWeight = FontWeight.Bold, fontSize = TextUnit(
+                        20F,
+                        TextUnitType.Sp
+                    ))
+                    Text("Questa è una descrizione di lunghezza contenuta",
+                        textAlign = TextAlign.Center
+                        )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+
+                    ElevatedButton(
+                        onClick = {
+
+                        },
+                        modifier = Modifier.width(100.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(
+                                119,
+                                18,
+                                14,
+                                255
+                            ),
+                            contentColor = Color.White
+                        ),
+                        border = BorderStroke(2.dp, Color(82, 44, 52, 255))
+                    ) {
+                        Text("BACK", fontWeight = FontWeight.Bold)
+                    }
+
+                    ElevatedButton(
+                        onClick = {
+
+                        },
+                        modifier = Modifier.width(100.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(
+                                26,
+                                214,
+                                4,
+                                255
+                            ),
+                            contentColor = Color.White
+                        ),
+                        border = BorderStroke(2.dp, Color(34, 100, 9, 255))
+                    ) {
+                        Text("EQUIP", fontWeight = FontWeight.Bold)
+                    }
+                }
+
+            }
+        }
+
+
+
+            }
+
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BaitGrid(focus: Boolean, context: Context, closeBaitGrid: () -> Unit, buttonMediaPlayer: MediaPlayer){
 
     val baits = (1..4).toList()
-    var selectedBait = -1
+    var selectedBait = remember { mutableStateOf(1) }
+    var gridState = remember { mutableStateOf(0) }
+
+    val lureDescriptions = listOf(
+        AnnotatedString(
+            "A common lure used for a common fish",
+            spanStyles = listOf(
+                AnnotatedString.Range(SpanStyle(color= colorResource(R.color.common)), 25, 31)
+            )
+        ),
+        AnnotatedString(
+            "Increase the chance to get a rare fish",
+            spanStyles = listOf(
+                AnnotatedString.Range(SpanStyle(color= colorResource(R.color.rare)), 29, 33)
+            )
+        ),
+        AnnotatedString(
+            "Increase the chance to get an abyssal type fish",
+            spanStyles = listOf(
+                AnnotatedString.Range(SpanStyle(color=colorResource(R.color.abyssal)), 30, 37)
+            )
+        ),
+        AnnotatedString(
+            "Increase the chance to get a legendary fish",
+            spanStyles = listOf(
+                AnnotatedString.Range(SpanStyle(color=colorResource(R.color.legendary)), 29, 38)
+            )
+        )
+
+    )
+
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
             .size(LocalConfiguration.current.screenWidthDp.dp * 0.8f,
                 LocalConfiguration.current.screenHeightDp.dp * 0.5f)
@@ -1329,48 +1510,174 @@ fun BaitGrid(focus: Boolean, context: Context, closeBaitGrid: () -> Unit){
 
         Box(
             modifier = Modifier
-                .fillMaxSize(),
+                .background(
+                    Color(180, 180, 180, 255)
+                )
+                .padding(10.dp)
+
+                //.border(1.dp, color = Color(96, 119, 128, 255))
+                .fillMaxSize()
+                ,
             contentAlignment = Alignment.Center
         ) {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.Center,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .padding(0.dp)
-                    .background(Color(52, 54, 66, 255))
-                    .fillMaxSize()
-                    .alpha(1f)
-            ) {
-                items(baits) { bait ->
-                    Box(
-                        contentAlignment = Alignment.Center,
+
+            when(gridState.value){
+                0 -> {
+
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier
-                            .background(
-                                Color.Gray
-                            )
-                            .clickable {
-                                selectedBait = bait.toInt()
-                                FishPreferences.saveLure(context, selectedBait)
-                                closeBaitGrid()
-                            }
-                            .border(1.dp, color = Color(96, 119, 128, 255))
-                            //.fillMaxSize()
+                            .padding(0.dp)
+                            .fillMaxSize()
                     ) {
-                        Image(
-                            painter = painterResource(id = LocalContext.current.resources.getIdentifier("lure"+bait,"drawable", LocalContext.current.packageName)),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .aspectRatio(1f), // Mantieni l'aspect ratio dell'immagine
-                            contentScale = ContentScale.Fit
+                        items(baits) { bait ->
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .background(
+                                        Color(68, 66, 66, 255)
+                                    )
+                                    .clickable {
+                                        selectedBait.value = bait
+                                        //FishPreferences.saveLure(context, selectedBait)
+                                        buttonMediaPlayer.start()
+                                        gridState.value = 1
+                                        //closeBaitGrid()
+                                    }
+                                    .border(1.dp, color = Color(56, 53, 53, 255))
+                                    .padding(8.dp)
+                                //.fillMaxSize()
+                            ) {
 
-                        )
+                                Image(
+                                    painter = painterResource(id = LocalContext.current.resources.getIdentifier(
+                                        "lure$bait","drawable", LocalContext.current.packageName)),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .aspectRatio(1f), // Mantieni l'aspect ratio dell'immagine
+                                    contentScale = ContentScale.Fit
+
+                                )
+                            }
+
+
+                        }
                     }
+                }
+                1 -> {
+
+                        Column (
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ){
+
+                            BoxWithConstraints(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(8.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                            ) {
+                                val maxHeight = constraints.maxHeight
+                                val maxWidth = constraints.maxWidth
+
+                                Image(
+                                    painter = painterResource(
+                                        id = LocalContext.current.resources.getIdentifier(
+                                            "lure" + selectedBait.value.toString(),
+                                            "drawable",
+                                            LocalContext.current.packageName)
+                                        ),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(
+                                            minOf(maxWidth, maxHeight).dp * 0.5f
+                                        )
+                                        .aspectRatio(1f), // Mantieni l'aspect ratio dell'immagine
+                                    contentScale = ContentScale.Fit
+                                )
+                            }
 
 
+
+
+                            Column(modifier = Modifier.weight(2f).background(Color(61, 61, 61, 255)),
+                                horizontalAlignment = Alignment.CenterHorizontally){
+                                Text(
+                                    text = stringResource(
+                                        id = LocalContext.current.resources.getIdentifier(
+                                            "lure" + selectedBait.value.toString()+"_name",
+                                            "string",
+                                            LocalContext.current.packageName)),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = TextUnit(30F, TextUnitType.Sp),
+                                    modifier = Modifier.padding(5.dp),
+                                    color = Color.White
+                                )
+                                Text(text = lureDescriptions[selectedBait.value.toInt()-1],
+                                    textAlign = TextAlign.Center,
+                                    fontSize = TextUnit(20F, TextUnitType.Sp),
+                                    modifier = Modifier.padding(horizontal = 5.dp),
+                                    color = Color.White
+                                )
+                            }
+
+
+
+
+
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .weight(1f),
+                                horizontalArrangement = Arrangement.SpaceEvenly
+                            ) {
+
+                                ElevatedButton(
+                                    onClick = {
+                                        gridState.value = 0
+                                        buttonMediaPlayer.start()
+                                    },
+                                    modifier = Modifier.width(100.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(196, 27, 21, 255),
+                                        contentColor = Color.White
+                                    ),
+                                    border = BorderStroke(2.dp, Color(82, 44, 52, 255))
+                                ) {
+                                    Text("BACK", fontWeight = FontWeight.Bold)
+                                }
+
+                                ElevatedButton(
+                                    onClick = {
+                                        //selectedBait = bait
+                                        FishPreferences.saveLure(context, selectedBait.value)
+                                        gridState.value = 0
+                                        buttonMediaPlayer.start()
+                                        closeBaitGrid()
+                                    },
+                                    modifier = Modifier.width(100.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(
+                                            26,
+                                            214,
+                                            4,
+                                            255
+                                        ),
+                                        contentColor = Color.White
+                                    ),
+                                    border = BorderStroke(2.dp, Color(34, 100, 9, 255))
+                                ) {
+                                    Text("EQUIP", fontWeight = FontWeight.Bold)
+                                }
+                            }
+
+                        }
                 }
             }
+
         }
     }
 

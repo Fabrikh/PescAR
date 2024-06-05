@@ -4,4 +4,13 @@
     <string name="tap_anywhere_to_add_model">Tap anywhere to add model</string>
     <string name="cast_fishing_rod">Swing your phone forward to cast your fishing rod!</string>
     <string name="pull_fishing_rod">Swing your phone backwards to catch the fish!</string>
+    <string name="lure1_name">Simple lure</string>
+    <string name="lure1_description">A common lure used for a common fish</string>
+    <string name="lure2_name">Colorful lure</string>
+    <string name="lure2_description">Increase the chance to get a rare fish</string>
+    <string name="lure3_name">Bright lure</string>
+    <string name="lure3_description">Increase the chance to get an abyssal type fish</string>
+    <string name="lure4_name">Golden lure</string>
+    <string name="lure4_description">Increase the chance to get a legendary fish</string>
+
 </resources>
