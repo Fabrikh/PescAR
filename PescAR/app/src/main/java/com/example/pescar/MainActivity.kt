@@ -94,6 +94,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ElevatedButton
@@ -147,6 +149,7 @@ private const val kModelFile_Rod = "models/bamboo_fishing_rod.glb"
 private const val kMaxModelInstances = 1
 private var lakeNode: ModelNode? = null
 private var currentState = -1
+private  var tutorialState = true
 private var onFocusShowcase = false
 
 private var entered = false
@@ -204,7 +207,16 @@ class MainActivity : ComponentActivity() {
 
             NavHost(navController, startDestination = "menu") {
 
-                composable("arbox") {ARBox(retroViewModel, navController, buttonMediaPlayer)}
+                composable("arbox/{tutorialmode}", arguments = listOf(
+                    navArgument("tutorialmode") { type = NavType.BoolType }
+                )) { backStackEntry ->
+                    ARBox(
+                        tutorialmode = backStackEntry.arguments?.getBoolean("tutorialmode") ?: false,
+                        retroViewModel = retroViewModel,
+                        navController = navController,
+                        buttonMediaPlayer = buttonMediaPlayer
+                    )
+                }
                 composable("showcase") {ShowcaseBox(retroViewModel, navController, buttonMediaPlayer)}
 
                 composable("menu") { MenuScreen(retroViewModel, navController, buttonMediaPlayer) }
@@ -240,14 +252,39 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@Composable
+fun TutorialPopup(content: (@Composable () -> Unit)?, onClose: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = {
+            if (content != null) {
+                content()
+            } else {
+                Text("No content available.")
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onClose,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Blue,
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Got it!")
+            }
+        }
+    )
+}
 
 @Composable
-fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMediaPlayer: MediaPlayer) {
+fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: NavController, buttonMediaPlayer: MediaPlayer) {
 
     val mContext = LocalContext.current
     val castMediaPlayer = MediaPlayer.create(mContext, R.raw.cast)
     val reelinMediaPlayer = MediaPlayer.create(mContext, R.raw.reelin)
     currentState = -1
+    tutorialState = true
 
     Log.println(Log.INFO,"SAVEDLURE", FishPreferences.getLure(mContext).toString())
 
@@ -265,7 +302,7 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
             val view = rememberView(engine)
             val collisionSystem = rememberCollisionSystem(view)
             var planeRenderer by remember { mutableStateOf(true) }
-
+            var tutorialState by remember { mutableStateOf(true) }
             val modelInstances = remember { mutableListOf<ModelInstance>() }
             var modelInstancesRod = remember { mutableListOf<ModelInstance>() }
             var trackingFailureReason by remember {
@@ -327,8 +364,11 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                                     var waitTheCatch = Random.nextInt(500, 3501)
 
                                     Handler().postDelayed({
-                                        if(!onFocusShowcase)
+                                        if(!onFocusShowcase){
                                             currentState = 1
+                                            tutorialState = true
+                                        }
+
                                         entered = false
                                     }, waitTheCatch.toLong())
 
@@ -345,6 +385,7 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                                     lakeNode!!.playAnimation(animationName = "Idle", loop = true)
                                     reelinMediaPlayer.start()
                                     currentState = 3
+                                    tutorialState = true
                                     entered = false
 
                                     val state = retroViewModel.retroUiState
@@ -414,74 +455,11 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                 onTrackingFailureChanged = {
                     trackingFailureReason = it
                 },
-                onSessionCreated = { session ->/*
-                            /*val anchorPose = Pose.makeTranslation(0.07f,0.0f,-0.1f) // Adjust the translation as needed
-                            val alt_session = session
-                            try {
-                                val anchor = alt_session.createAnchor(anchorPose)
-                                // ... rest of your code
-                            } catch (e: Exception) {
-                                Log.e("MyApp", "Error creating anchor: ${e.message}")
-                            }
-                            val anchor = session.createAnchor(cameraNode.pose)*/
-                            rodNode = ModelNode(
-                                modelInstance = modelInstancesRod.apply {
-                                    if (isEmpty()) {
-                                        this += modelLoader.createInstancedModel(kModelFile_Rod, kMaxModelInstances)
-                                    }
-                                }.removeLast(),
-                                // Scale to fit in a 0.5 meters cube
-                                scaleToUnits = 1.0f
-
-                            )
-                            //val anchornode = AnchorNode(engine = engine, anchor = anchor)
-                            //anchornode.addChildNode(rodNode)
-                            childNodes += rodNode*/
+                onSessionCreated = { session ->
 
                 },
 
                 onSessionUpdated = { session, updatedFrame ->
-                    /*val offset: Position = Position(0.0f, 0.0f, -1.0f)
-
-                // Apply the offset to the camera's forward direction
-                val offsetMatrix = Matrix().apply {
-                    setTranslation(Vector3(offset.x, offset.y, offset.z))
-                }
-                val cameraPosition = cameraNode.position
-                val cameraRotation = cameraNode.rotation
-                val cameraQuaternion = cameraNode.quaternion
-
-
-                val cameraMatrix = Matrix().apply {
-                    makeTrs(Vector3(cameraPosition.x, cameraPosition.y, cameraPosition.z), cameraQuaternion.toOldQuaternion(), Vector3(1.0f, 1.0f, 1.0f))
-                }
-
-                // Multiply the cameraMatrix by the offsetMatrix
-                val combinedMatrix = Matrix().apply {
-                    multiply(cameraMatrix, offsetMatrix, this)
-                }
-
-                // Extract the final position, quaternion, and scale from the combined matrix
-                val finalPosition = Vector3().apply {
-                    combinedMatrix.decomposeTranslation(this)
-                }
-
-                val finalQuaternion = Quaternion().apply {
-                    combinedMatrix.extractQuaternion(this)
-                }
-
-                val finalScale = Vector3().apply {
-                    combinedMatrix.decomposeScale(this)
-                }
-
-                // Set the position, quaternion, and scale to the rodNode
-                rodNode.transform(
-                    position = Position(finalPosition.x, finalPosition.y, finalPosition.z),
-                    quaternion = finalQuaternion.toNewQuaternion(),
-                    scale = Position(finalScale.x, finalScale.y, finalScale.z)
-                )
-
-                Log.println(Log.INFO, "MyApp", rodNode.position.toString())*/
 
                     if (currentState == 1)
                         if (retroViewModel.retroUiState == RetroUiState.Error) {
@@ -490,12 +468,14 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                             lakeNode!!.playAnimation(animationName = "Idle", loop = true)
                             Log.println(Log.ERROR, "MyApp", "RetroViewModel Error")
                             currentState = 0
+                            tutorialState = true
                         } else if (retroViewModel.retroUiState != RetroUiState.Loading) {
                             lakeNode!!.stopAnimation(animationName = "HookIdle")
                             lakeNode!!.playAnimation(animationName = "FishHooking", loop = true)
                             lakeNode!!.playAnimation(animationName = "Catch", loop = true)
                             Log.println(Log.INFO, "MyApp", "RetroViewModel Success")
                             currentState = 2
+                            tutorialState = true
                             triggerVibration()
                         }
 
@@ -510,6 +490,7 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
 
                         if (currentState == 3 || currentState == -1) {
                             currentState = 0
+                            tutorialState = true
                             retroViewModel.retroUiState = RetroUiState.Loading
                         }
 
@@ -558,80 +539,258 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
                     }
                     .offset(x = 40.dp, y = 15.dp)
             )
-            Text(
+            /*
+            val text = when (currentState) {
+                -1 -> if (tutorialmode){
+                    if(childNodes.isEmpty()){
+                        stringResource(R.string.point_your_phone_down)
+                    } else {
+                        stringResource(R.string.place_grid)
+                    }
+                } else ""
+                0 -> if (tutorialmode) stringResource(R.string.cast_fishing_rod) else ""
+                1 -> if (tutorialmode) stringResource(R.string.cast_fishing_rod) else ""
+                2 -> if (tutorialmode) stringResource(R.string.pull_fishing_rod) else ""
+                else -> {
+                    when (val state = retroViewModel.retroUiState) {
+                        is RetroUiState.Success -> {
+                            val fishId = state.fishInfo.get("id").asInt
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clickable {
+                                        if (currentState == 3 || currentState == -1) {
+                                            currentState = 0
+                                            retroViewModel.retroUiState = RetroUiState.Loading
+                                        }
+                                    }
+                            ) {
+                                if (tutorialmode) {
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.TopCenter)
+                                            .background(
+                                                Color.Black.copy(alpha = 0.7f),
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
+                                            .padding(8.dp)
+                                            .padding(top = 16.dp, start = 32.dp, end = 32.dp)
+                                    ) {
+                                        Text(
+                                            textAlign = TextAlign.Center,
+                                            fontSize = 28.sp,
+                                            color = Color.White,
+                                            text = stringResource(R.string.catch_screen) // Replace with your tutorial text
+                                        )
+                                    }
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .height(460.dp)
+                                        .align(Alignment.Center)
+                                        .clickable { navController.navigate("fishDetail/$fishId") }
+                                ) {
+                                    TestBox(retroViewModel = retroViewModel)
+                                }
+                            }
+
+                            ""
+                        }
+                        is RetroUiState.Error -> "Error on request"
+                        is RetroUiState.Loading -> "Loading"
+                    }
+                }
+            }
+
+            Box(
                 modifier = Modifier
                     .systemBarsPadding()
                     .fillMaxWidth()
                     .align(Alignment.TopCenter)
-                    .padding(top = 16.dp, start = 32.dp, end = 32.dp),
-                textAlign = TextAlign.Center,
-                fontSize = 28.sp,
-                color = Color.White,
-                text = when (currentState) {
-                    -1 -> {
-                        stringResource(R.string.point_your_phone_down)
+                    .padding(top = 16.dp, start = 32.dp, end = 32.dp)
+            ) {
+                if (text.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                Color.Black.copy(alpha = 0.7f),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(8.dp)
+                            .align(Alignment.Center)
+                    ) {
+                        Text(
+                            textAlign = TextAlign.Center,
+                            fontSize = 28.sp,
+                            color = Color.White,
+                            text = text
+                        )
                     }
+                }
+            }
 
+            */
+
+            var currentPopup by remember { mutableStateOf(1) }
+            if (tutorialmode && tutorialState) {
+                when(currentState) {
+                    -1 -> when (currentPopup) {
+                        1 -> {
+                            TutorialPopup(
+                                content = {
+                                          Column {
+                                              Text(stringResource(R.string.point_your_phone_down))
+                                          }
+                                          },
+                                onClose = { currentPopup = 2 }
+                            )
+                        }
+
+                        2 -> {
+                            TutorialPopup(
+                                content = {
+                                    Column {
+                                        Text(stringResource(R.string.my_collection))
+                                    }
+                                },
+                                onClose = { currentPopup = 3 }
+                            )
+                        }
+
+                        3 -> {
+                            TutorialPopup(
+                                content = {
+                                    Column {
+                                        Text(stringResource(R.string.lures))
+                                    }
+                                },
+                                onClose = {
+                                    currentPopup = 1
+                                    tutorialState = false
+                                }
+                            )
+                        }
+                    }
                     0 -> {
-                        //"Swing your phone forward to cast your fishing rod!"
-                        stringResource(R.string.cast_fishing_rod)
+                        TutorialPopup(
+                            content = {
+                                Column {
+                                    Text(stringResource(R.string.cast_fishing_rod))
+                                    Image(
+                                        painter = painterResource(id = R.drawable.cast_draw), // Replace with your image resource
+                                        contentDescription = "Cast Tutorial",
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            },
+                            onClose = {
+                                tutorialState = false
+                            }
+                        )
                     }
-
                     1 -> {
-                        //"Swing your phone forward to cast your fishing rod!"
-                        stringResource(R.string.cast_fishing_rod)
+                        null
                     }
-
                     2 -> {
-                        //"Swing your phone backwards to catch the fish!"
-                        stringResource(R.string.pull_fishing_rod)
+                        TutorialPopup(
+                            content = {
+                                Column {
+                                    Text(stringResource(R.string.pull_fishing_rod))
+                                    Image(
+                                        painter = painterResource(id = R.drawable.catch_draw), // Replace with your image resource
+                                        contentDescription = "Cast Tutorial",
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            },
+                            onClose = {
+                                tutorialState = false
+                            }
+                        )
                     }
+                    3 -> {
+                        TutorialPopup(
+                            content = {
+                                Column {
+                                    Text(stringResource(R.string.catch_screen))
+                                }
+                            },
+                            onClose = {
+                                tutorialState = false
+                            }
+                        )
+                    }
+                    else -> {null}
+                }
 
-                    else -> {
-                        //var randomFish = fishNames[Random.nextInt(fishNames.size)]
-                        //"Congratulations! You have caught a $randomFish"
+            } else {
+                val text = if(currentState > 2){
+                    when (val state = retroViewModel.retroUiState) {
+                        is RetroUiState.Success -> {
+                            val fishId = state.fishInfo.get("id").asInt
 
-                        when (val state = retroViewModel.retroUiState) {
-                            is RetroUiState.Success -> {
-
-                                val fishId = state.fishInfo.get("id").asInt
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clickable {
+                                        if (currentState == 3 || currentState == -1) {
+                                            currentState = 0
+                                            tutorialState = true
+                                            retroViewModel.retroUiState = RetroUiState.Loading
+                                        }
+                                    }
+                            ) {
 
                                 Box(
-                                    contentAlignment = Alignment.Center,
                                     modifier = Modifier
-                                        .fillMaxSize()
-                                        .clickable {
-                                            if (currentState == 3 || currentState == -1) {
-                                                currentState = 0
-                                                retroViewModel.retroUiState = RetroUiState.Loading
-                                            }
-                                        }
-                                ) {
-                                    
-                                    /*HomeScreen(
-                                        uiState = retroViewModel.retroUiState,
-                                        fishCount = retroViewModel.fishCount,
-                                        false
-                                    )*/
-                                    Box(modifier = Modifier
                                         .height(460.dp)
+                                        .align(Alignment.Center)
                                         .clickable { navController.navigate("fishDetail/$fishId") }
-                                    ){
-                                        TestBox(retroViewModel = retroViewModel)
-                                    }
-
+                                ) {
+                                    TestBox(retroViewModel = retroViewModel)
                                 }
-
-
-                                ""
                             }
 
-                            is RetroUiState.Error -> "Error on request"
-                            is RetroUiState.Loading -> "Loading"
+                            ""
+                        }
+                        is RetroUiState.Error -> "Error on request"
+                        is RetroUiState.Loading -> "Loading"
+                    }
+                } else {
+                    ""
+                }
+
+                Box(
+                    modifier = Modifier
+                        .systemBarsPadding()
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                        .padding(top = 16.dp, start = 32.dp, end = 32.dp)
+                ) {
+                    if (text.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    Color.Black.copy(alpha = 0.7f),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .padding(8.dp)
+                                .align(Alignment.Center)
+                        ) {
+                            Text(
+                                textAlign = TextAlign.Center,
+                                fontSize = 28.sp,
+                                color = Color.White,
+                                text = text
+                            )
                         }
                     }
                 }
-            )
+            }
 
 
             var onFocusBaits by remember { mutableStateOf(false) }
@@ -662,6 +821,7 @@ fun ARBox(retroViewModel: RetroViewModel, navController: NavController, buttonMe
             ) {
                 ElevatedButton(onClick = {
                     currentState = -1
+                    tutorialState = true
                     onFocusShowcase = true
                     buttonMediaPlayer.start()
 
@@ -793,8 +953,11 @@ fun createAnchorNode(
 
                     var waitTheCatch = Random.nextInt(500, 3501)
                     Handler().postDelayed({
-                        if(!onFocusShowcase)
+                        if(!onFocusShowcase){
                             currentState = 1
+                            tutorialState = true
+                        }
+
                         entered = false
                     }, waitTheCatch.toLong())
 
@@ -812,6 +975,7 @@ fun createAnchorNode(
                 this.playAnimation(animationName = "Idle", loop = true)
                 reelinMediaPlayer.start()
                 currentState = 3
+                tutorialState = true
                 entered = false
                 val state = retroViewModel.retroUiState
                 when (state) {
@@ -862,6 +1026,7 @@ fun createAnchorNode(
 
     lakeNode = modelNode
     currentState = 0
+    tutorialState = true
     return anchorNode
 }
 
@@ -1285,7 +1450,8 @@ fun MenuScreen(retroViewModel: RetroViewModel, navController: NavController, but
             Spacer(modifier = Modifier.height(200.dp))
 
             ElevatedButton(onClick = {
-                navController.navigate("arbox")
+                var tutorialmode = false
+                navController.navigate("arbox/$tutorialmode")
                 buttonMediaPlayer.start()
                                      },
                 modifier = Modifier.width(180.dp),
@@ -1293,6 +1459,17 @@ fun MenuScreen(retroViewModel: RetroViewModel, navController: NavController, but
                 border = BorderStroke(2.dp,Color(22, 89, 112, 120))
             ) {
                 Text("START",fontWeight = FontWeight.Bold)
+            }
+            ElevatedButton(onClick = {
+                var tutorialmode = true
+                navController.navigate("arbox/$tutorialmode")
+                buttonMediaPlayer.start()
+            },
+                modifier = Modifier.width(180.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255)),
+                border = BorderStroke(2.dp,Color(22, 89, 112, 120))
+            ) {
+                Text("TUTORIAL", fontWeight = FontWeight.Bold)
             }
             ElevatedButton(onClick = {
                 navController.navigate("showcase")
@@ -1602,7 +1779,9 @@ fun BaitGrid(focus: Boolean, context: Context, closeBaitGrid: () -> Unit, button
 
 
 
-                            Column(modifier = Modifier.weight(2f).background(Color(61, 61, 61, 255)),
+                            Column(modifier = Modifier
+                                .weight(2f)
+                                .background(Color(61, 61, 61, 255)),
                                 horizontalAlignment = Alignment.CenterHorizontally){
                                 Text(
                                     text = stringResource(
