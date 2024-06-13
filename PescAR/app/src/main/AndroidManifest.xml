@@ -21,7 +21,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="PescAR"
+            android:label="@string/app_name"
             android:theme="@style/Theme.RetroTest">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

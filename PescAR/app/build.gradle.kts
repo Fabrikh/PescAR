@@ -73,7 +73,9 @@ dependencies {
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
-    implementation("io.github.sceneview:arsceneview:2.0.2")
+
+    val sw_version = "2.0.2"
+    implementation("io.github.sceneview:arsceneview:$sw_version")
 
     val nav_version = "2.7.6"
     implementation("androidx.navigation:navigation-compose:$nav_version")

@@ -3,7 +3,6 @@ package com.example.pescar
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
-import android.content.res.Resources
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -11,20 +10,20 @@ import android.hardware.SensorManager
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
-import android.os.Debug
 import android.os.Handler
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.util.LayoutDirection
 import android.util.Log
-import android.util.Size
 import android.view.MotionEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.EaseOutCubic
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -127,8 +126,6 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Outline
@@ -136,12 +133,13 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
-import kotlin.io.path.Path
-import kotlin.io.path.moveTo
+import com.google.android.filament.MaterialInstance
+import com.google.ar.sceneform.rendering.Material
+import io.github.sceneview.material.setEmissiveStrength
+import io.github.sceneview.node.RenderableNode
 
 
 private const val kModelFile = "models/lake_and_fish.glb"
@@ -155,6 +153,7 @@ private var onFocusShowcase = false
 private var entered = false
 
 private var DIFFICULTY = 1 // 0: Easy, 1: Medium, 2: Hard
+
 
 object FishPreferences {
     private const val PREF_NAME = "FishPrefs"
@@ -433,6 +432,42 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
                 }
             }
 
+            val rainbowColors = listOf(
+                Color.Red,
+                Color.Yellow,
+                Color.Green,
+                Color.Blue,
+                Color.Cyan,
+                Color.Magenta,
+            )
+
+
+            fun changeLureColor(lureId: Int){
+
+                if (currentState == -1) return
+
+                val BAITMATERIALS = arrayOf(
+                    materialLoader.createColorInstance(
+                        color = Color(0.773f, 0.773f, 0.773f, 1.0f)
+                    ),
+                    materialLoader.createColorInstance(
+                        color = rainbowColors.random(),
+                    ),
+                    materialLoader.createColorInstance(
+                        color = Color(0.396f, 0.945f, 0.161f, 1.0f),
+                        reflectance = 2f,
+                        roughness = 2f
+                    ),
+                    materialLoader.createColorInstance(
+                        color = Color(0.941f, 0.792f, 0.031f, 1.0f),
+                        metallic = 2f,
+                        reflectance = 1f
+                    )
+                )
+
+                (lakeNode?.nodes?.get("Hook") as RenderableNode).materialInstance = BAITMATERIALS[lureId-1] as MaterialInstance
+            }
+
             ARScene(
                 modifier = Modifier.fillMaxSize(),
                 childNodes = childNodes,
@@ -456,7 +491,6 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
                     trackingFailureReason = it
                 },
                 onSessionCreated = { session ->
-
                 },
 
                 onSessionUpdated = { session, updatedFrame ->
@@ -515,7 +549,8 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
                                         retroViewModel = retroViewModel,
                                         castMediaPlayer,
                                         reelinMediaPlayer,
-                                        context = context
+                                        context = context,
+                                        changeLureColor = ::changeLureColor
                                     )
 
                                 }
@@ -528,16 +563,16 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
 
             Image(
 
-                painter = painterResource(id = R.drawable.rod),
+                painter = painterResource(id = R.drawable.rod2),
                 contentDescription = "Fishing Rod",
                 modifier = Modifier
                     .fillMaxHeight()
                     .graphicsLayer {
-                        rotationZ = -75f
-                        scaleX = 3f
-                        scaleY = 3f
+                        rotationZ = 110f
+                        scaleX = 2.2f
+                        scaleY = -2.0f
                     }
-                    .offset(x = 40.dp, y = 15.dp)
+                    .offset(x= (-40).dp,y = 90.dp)
             )
             /*
             val text = when (currentState) {
@@ -799,6 +834,10 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
                 onFocusBaits = !onFocusBaits
             }
 
+
+
+
+
             if(onFocusBaits){
                 Box(
                     modifier = Modifier
@@ -809,7 +848,7 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
                     ,
                     contentAlignment = Alignment.Center,
                 ) {
-                    BaitGrid(onFocusBaits, context, { closeBaitGrid() }, buttonMediaPlayer)
+                    BaitGrid(onFocusBaits, context, { closeBaitGrid() }, ::changeLureColor, buttonMediaPlayer)
                 }
             }
 
@@ -920,7 +959,8 @@ fun createAnchorNode(
     retroViewModel: RetroViewModel,
     castMediaPlayer: MediaPlayer,
     reelinMediaPlayer: MediaPlayer,
-    context: Context
+    context: Context,
+    changeLureColor: (lureId: Int) -> Unit
 ): AnchorNode {
 
     val anchorNode = AnchorNode(engine = engine, anchor = anchor)
@@ -937,6 +977,22 @@ fun createAnchorNode(
         isEditable = false
         isPositionEditable = false
         isRotationEditable = false
+
+        /*
+        this.modelInstance.materialInstances[0] = materialLoader.createColorInstance(
+            color = Color(0.0f, 0.0f, 1.0f, 1.0f)
+        )*/
+
+
+        Log.println(Log.INFO,"Model", this.nodes.toString())
+        Log.println(Log.INFO,"Model", this.renderableNodes.toString())
+        /*
+        val test = this.nodes["Hook"].apply {
+            setMaterialInstance( materialInstance = materialLoader.createColorInstance(
+                color = Color(0.0f, 0.102f, 1.0f, 1.0f)
+            ))
+        }*/
+
         onFling = {e1: MotionEvent?, e2: MotionEvent, v: Float2 ->
 
             if(e1 != null && e2.y < e1.y) {
@@ -1025,6 +1081,7 @@ fun createAnchorNode(
     }
 
     lakeNode = modelNode
+    changeLureColor(FishPreferences.getLure(context))
     currentState = 0
     tutorialState = true
     return anchorNode
@@ -1628,7 +1685,7 @@ fun Test(){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BaitGrid(focus: Boolean, context: Context, closeBaitGrid: () -> Unit, buttonMediaPlayer: MediaPlayer){
+fun BaitGrid(focus: Boolean, context: Context, closeBaitGrid: () -> Unit, changeLureColor: (lureId: Int) -> Unit, buttonMediaPlayer: MediaPlayer){
 
     val baits = (1..4).toList()
     var selectedBait = remember { mutableStateOf(1) }
@@ -1776,9 +1833,6 @@ fun BaitGrid(focus: Boolean, context: Context, closeBaitGrid: () -> Unit, button
                                 )
                             }
 
-
-
-
                             Column(modifier = Modifier
                                 .weight(2f)
                                 .background(Color(61, 61, 61, 255)),
@@ -1801,11 +1855,6 @@ fun BaitGrid(focus: Boolean, context: Context, closeBaitGrid: () -> Unit, button
                                     color = Color.White
                                 )
                             }
-
-
-
-
-
 
                             Row(
                                 modifier = Modifier
@@ -1836,6 +1885,8 @@ fun BaitGrid(focus: Boolean, context: Context, closeBaitGrid: () -> Unit, button
                                         gridState.value = 0
                                         buttonMediaPlayer.start()
                                         closeBaitGrid()
+                                        changeLureColor(selectedBait.value.toInt())
+
                                     },
                                     modifier = Modifier.width(100.dp),
                                     colors = ButtonDefaults.buttonColors(

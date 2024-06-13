@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PescAR</string>
+    <string name="app_name">AquArium</string>
     <string name="point_your_phone_down">Point your phone down at an empty space, and move it around slowly\nWhen you\'ll see a grid, tap on it to place the lake</string>
     <string name="tap_anywhere_to_add_model"></string>
     <string name="my_collection">If you click on the button on the bottom left you can go to your personal collection of fishes!\nThere you can watch all of the fishes you\'ve got!</string>
