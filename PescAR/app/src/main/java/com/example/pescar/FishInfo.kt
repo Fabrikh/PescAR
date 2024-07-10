@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pescar.ui.theme.RetroTestTheme
 import com.google.gson.JsonObject
@@ -88,12 +91,12 @@ fun RetroApp(
 
 @Composable
 fun HomeScreen(
-    uiState: RetroUiState, fishCount: Int, backSide: Boolean, modifier: Modifier = Modifier
+    uiState: RetroUiState, fishCount: Int, backSide: Boolean, hideDescription: Boolean = false, navToDetails: (fishId: Int) -> Unit = {},modifier: Modifier = Modifier
 ) {
 
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
         when (uiState) {
-            is RetroUiState.Success -> FishInfoCard(uiState.fishInfo, fishCount, backSide)
+            is RetroUiState.Success -> FishInfoCard(uiState.fishInfo, fishCount, backSide, hideDescription = hideDescription, navToDetails)
             is RetroUiState.Error -> ErrorScreen()
             is RetroUiState.Loading -> LoadingScreen()
             else -> {}
@@ -169,7 +172,9 @@ var previewRarity = 3
 fun FishInfoCard(
     fishInfo: JsonObject,
     fishCount: Int,
-    backSide: Boolean
+    backSide: Boolean,
+    hideDescription: Boolean,
+    navToDetails: (fishId: Int) -> Unit = {}
 ) {
     val cardShape = RoundedCornerShape(8.dp)
     val cardRarity = fixJsonString(fishInfo.get("rarity").toString()).toInt()
@@ -283,30 +288,55 @@ fun FishInfoCard(
 
                             Spacer(modifier = Modifier.height(5.dp))
 
-                            Card(
-                                shape = RoundedCornerShape(8.dp),
-                                // modifier = modifier.size(280.dp, 240.dp)
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(10.dp),
-                                border = BorderStroke(1.dp, BORDER_COLOR),
-                                //set card elevation of the card
-                                elevation = CardDefaults.cardElevation(
-                                    defaultElevation = 10.dp,
-                                ),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = WRITING_BACKGROUND_COLOR[cardRarity - 1],
-                                ),
-                            ) {
-                                Text(
-                                    modifier = Modifier.padding(8.dp),
-                                    text = fixJsonString(fishInfo.get("description").toString()),
-                                    //maxLines = 1,
-                                    //overflow = TextOverflow.Ellipsis,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = TEXT_COLOR
-                                )
-                            }
+
+                                if (!hideDescription) {
+                                    Card(
+                                        shape = RoundedCornerShape(8.dp),
+                                        // modifier = modifier.size(280.dp, 240.dp)
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(10.dp),
+                                        border = BorderStroke(1.dp, BORDER_COLOR),
+                                        //set card elevation of the card
+                                        elevation = CardDefaults.cardElevation(
+                                            defaultElevation = 10.dp,
+                                        ),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = WRITING_BACKGROUND_COLOR[cardRarity - 1],
+                                        ),
+                                    ) {
+                                    Text(
+                                        modifier = Modifier.padding(8.dp),
+                                        text = fixJsonString(
+                                            fishInfo.get("description").toString()
+                                        ),
+                                        //maxLines = 1,
+                                        //overflow = TextOverflow.Ellipsis,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = TEXT_COLOR
+                                    )}
+                                }else{
+
+                                    Column (modifier = Modifier.fillMaxSize(),horizontalAlignment = Alignment.CenterHorizontally){
+                                        Button(
+                                            onClick = { navToDetails(fishInfo.get("id").asInt) },
+                                            //modifier = Modifier.fillMaxSize(),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = WRITING_BACKGROUND_COLOR[cardRarity - 1],
+                                                contentColor = Color.White
+                                            ),
+                                            border = BorderStroke(2.dp, CARD_BACKGROUND_COLOR_LIST[cardRarity - 1][1])
+                                        ) {
+                                            Text(
+                                                "Learn about him!",
+                                                fontSize = 25.sp,
+                                                textAlign = TextAlign.Center,
+                                                lineHeight = 40.sp
+                                            )
+                                        }
+                                    }
+                                }
+
 
                         }
                     }

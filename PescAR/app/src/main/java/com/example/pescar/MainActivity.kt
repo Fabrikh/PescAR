@@ -18,13 +18,10 @@ import android.util.Log
 import android.view.MotionEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.EaseOutCubic
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -144,8 +141,6 @@ import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import coil.size.Size
 import com.google.android.filament.MaterialInstance
-import com.google.ar.sceneform.rendering.Material
-import io.github.sceneview.material.setEmissiveStrength
 import io.github.sceneview.node.RenderableNode
 
 
@@ -236,7 +231,7 @@ class MainActivity : ComponentActivity() {
                         retroViewModel = retroViewModel
                     )
                 }
-                //composable("test"){TestBox(retroViewModel)}
+                composable("test"){TestBox(retroViewModel) {} }
             }
 
 
@@ -482,10 +477,14 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
 
                 val BAITMATERIALS = arrayOf(
                     materialLoader.createColorInstance(
-                        color = Color(0.773f, 0.773f, 0.773f, 1.0f)
+                        color = Color(1.0f, 1.0f, 1.0f, 1.0f),
+                        reflectance = 2f,
+                        roughness = 2f
                     ),
                     materialLoader.createColorInstance(
                         color = rainbowColors.random(),
+                        reflectance = 2f,
+                        roughness = 2f
                     ),
                     materialLoader.createColorInstance(
                         color = Color(0.396f, 0.945f, 0.161f, 1.0f),
@@ -702,6 +701,10 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
 
             */
 
+            fun gotoFishDetails(fishId: Int){
+                buttonMediaPlayer.start()
+                navController.navigate("fishDetail/$fishId")
+            }
             var currentPopup by remember { mutableStateOf(1) }
             if (tutorialmode && tutorialState) {
                 when(currentState) {
@@ -834,9 +837,13 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
                                     modifier = Modifier
                                         .height(460.dp)
                                         .align(Alignment.Center)
-                                        .clickable { navController.navigate("fishDetail/$fishId") }
+                                        //.clickable { navController.navigate("fishDetail/$fishId") }
                                 ) {
-                                    TestBox(retroViewModel = retroViewModel)
+                                    TestBox(retroViewModel = retroViewModel) {
+                                        gotoFishDetails(
+                                            fishId
+                                        )
+                                    }
                                 }
                             }
 
@@ -1411,7 +1418,7 @@ fun FishDetailScreen(fishId: Int, navController: NavController, retroViewModel: 
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
-fun TestBox(retroViewModel: RetroViewModel){
+fun TestBox(retroViewModel: RetroViewModel, navToDetails: (fishId: Int) -> Unit = {}){
 
     val configuration = LocalConfiguration.current
 
@@ -1469,7 +1476,9 @@ fun TestBox(retroViewModel: RetroViewModel){
                 HomeScreen(
                     uiState = retroViewModel.retroUiState,
                     fishCount = retroViewModel.fishCount,
-                    backSide = false
+                    backSide = false,
+                    hideDescription = true,
+                    navToDetails = navToDetails
                 )
             },
             back = {
