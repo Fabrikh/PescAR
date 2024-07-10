@@ -4,8 +4,8 @@
     <string name="tap_anywhere_to_add_model"></string>
     <string name="my_collection">If you click on the button on the bottom left you can go to your personal collection of fishes!\nThere you can watch all of the fishes you\'ve got!</string>
     <string name="lures">On the bottom right you\'ll find the lures!\nEach of them has a different affect on the fish you\'ll catch, try them out!</string>
-    <string name="cast_fishing_rod">Now you can cast your fishing rod!\nTo do so you can swing your phone forward or you can also swipe upward on the screen!</string>
-    <string name="pull_fishing_rod">Something is there!\nSwing your phone backwards or make a long press on the lake to catch the fish!</string>
+    <string name="cast_fishing_rod">Time to cast!\nUse one of those actions to cast the rod!</string>
+    <string name="pull_fishing_rod">Uh?!\nUse one of those actions to catch the fish!</string>
     <string name="lure1_name">Simple lure</string>
     <string name="lure1_description">A common lure used for a common fish</string>
     <string name="lure2_name">Colorful lure</string>

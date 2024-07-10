@@ -9,6 +9,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.media.MediaPlayer
 import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.os.Handler
 import android.os.VibrationEffect
@@ -136,6 +137,12 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
+import coil.ImageLoader
+import coil.compose.rememberAsyncImagePainter
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
+import coil.request.ImageRequest
+import coil.size.Size
 import com.google.android.filament.MaterialInstance
 import com.google.ar.sceneform.rendering.Material
 import io.github.sceneview.material.setEmissiveStrength
@@ -249,6 +256,33 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         mediaPlayer?.release() // Rilascia le risorse quando l'app viene distrutta
     }
+}
+
+
+@Composable
+fun GifImage(
+    modifier: Modifier = Modifier,
+    imagename: Any
+) {
+    val context = LocalContext.current
+    val imageLoader = ImageLoader.Builder(context)
+        .components {
+            if (SDK_INT >= 28) {
+                add(ImageDecoderDecoder.Factory())
+            } else {
+                add(GifDecoder.Factory())
+            }
+        }
+        .build()
+    Image(
+        painter = rememberAsyncImagePainter(
+            ImageRequest.Builder(context).data(data = imagename).apply(block = {
+                size(Size.ORIGINAL)
+            }).build(), imageLoader = imageLoader
+        ),
+        contentDescription = null,
+        modifier = modifier.fillMaxWidth(),
+    )
 }
 
 @Composable
@@ -572,7 +606,7 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
                         scaleX = 2.2f
                         scaleY = -2.0f
                     }
-                    .offset(x= (-40).dp,y = 90.dp)
+                    .offset(x = (-40).dp, y = 90.dp)
             )
             /*
             val text = when (currentState) {
@@ -713,12 +747,24 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
                             content = {
                                 Column {
                                     Text(stringResource(R.string.cast_fishing_rod))
+                                    /*
                                     Image(
                                         painter = painterResource(id = R.drawable.cast_draw), // Replace with your image resource
                                         contentDescription = "Cast Tutorial",
                                         modifier = Modifier.fillMaxWidth(),
                                         contentScale = ContentScale.Crop
                                     )
+                                    */
+                                    val imageLoader = ImageLoader.Builder(context)
+                                        .components {
+                                            if (SDK_INT >= 28) {
+                                                add(ImageDecoderDecoder.Factory())
+                                            } else {
+                                                add(GifDecoder.Factory())
+                                            }
+                                        }
+                                        .build()
+                                    GifImage(imagename = R.drawable.resource_throw)
                                 }
                             },
                             onClose = {
@@ -734,12 +780,16 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
                             content = {
                                 Column {
                                     Text(stringResource(R.string.pull_fishing_rod))
-                                    Image(
-                                        painter = painterResource(id = R.drawable.catch_draw), // Replace with your image resource
-                                        contentDescription = "Cast Tutorial",
-                                        modifier = Modifier.fillMaxWidth(),
-                                        contentScale = ContentScale.Crop
-                                    )
+                                    val imageLoader = ImageLoader.Builder(context)
+                                        .components {
+                                            if (SDK_INT >= 28) {
+                                                add(ImageDecoderDecoder.Factory())
+                                            } else {
+                                                add(GifDecoder.Factory())
+                                            }
+                                        }
+                                        .build()
+                                    GifImage(imagename = R.drawable.resource_catch)
                                 }
                             },
                             onClose = {
