@@ -328,7 +328,7 @@ fun FishInfoCard(
                                             border = BorderStroke(2.dp, CARD_BACKGROUND_COLOR_LIST[cardRarity - 1][1])
                                         ) {
                                             Text(
-                                                "Learn about him!",
+                                                "Learn about it!",
                                                 fontSize = 25.sp,
                                                 textAlign = TextAlign.Center,
                                                 lineHeight = 40.sp

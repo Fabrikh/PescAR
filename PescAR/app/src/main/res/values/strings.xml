@@ -1,11 +1,13 @@
 <resources>
     <string name="app_name">AquArium</string>
-    <string name="point_your_phone_down">Point your phone down at an empty space, and move it around slowly\nWhen you\'ll see a grid, tap on it to place the lake</string>
+    <string name="point_your_phone_down">Point your camera towards a surface, move it until you\'ll see a grid and tap on it to place a lake.</string>
     <string name="tap_anywhere_to_add_model"></string>
-    <string name="my_collection">If you click on the button on the bottom left you can go to your personal collection of fishes!\nThere you can watch all of the fishes you\'ve got!</string>
-    <string name="lures">On the bottom right you\'ll find the lures!\nEach of them has a different affect on the fish you\'ll catch, try them out!</string>
-    <string name="cast_fishing_rod">Time to cast!\nUse one of those actions to cast the rod!</string>
-    <string name="pull_fishing_rod">Uh?!\nUse one of those actions to catch the fish!</string>
+    <string name="my_collection">On the bottom left you can go to your personal collection of fishes!\nCheck all the fishes you\'ve got!</string>
+    <string name="lures">On the bottom right you\'ll find the lures, each with a unique effect!</string>
+    <string name="cast_fishing_rod">Time to catch something!\nUse one of these actions to cast the rod!</string>
+    <string name="pull_fishing_rod">Is that a fish?!\nQuick, use one of these actions to catch it!</string>
+    <string name="catch_screen">You\'ve caught something!\nYou can find its name and ID on the card top, or learn more details!</string>
+    <string name="end_tutorial">Good job, you have completed the tutorial! Have fun!</string>
     <string name="lure1_name">Simple lure</string>
     <string name="lure1_description">A common lure used for a common fish</string>
     <string name="lure2_name">Colorful lure</string>
@@ -14,7 +16,6 @@
     <string name="lure3_description">Increase the chance to get an abyssal type fish</string>
     <string name="lure4_name">Golden lure</string>
     <string name="lure4_description">Increase the chance to get a legendary fish</string>
-    <string name="catch_screen">You\'ve caught something!\nYou can find the fish name and it\'s ID in the upper part of the card!\nTap on the card to check it out, otherwise tap outside of it to continue your fishing!</string>
     <string name="place_grid" />
 
 </resources>

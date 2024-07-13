@@ -312,7 +312,6 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
     val castMediaPlayer = MediaPlayer.create(mContext, R.raw.cast)
     val reelinMediaPlayer = MediaPlayer.create(mContext, R.raw.reelin)
     currentState = -1
-    tutorialState = true
 
     Log.println(Log.INFO,"SAVEDLURE", FishPreferences.getLure(mContext).toString())
 
@@ -706,7 +705,25 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
                 navController.navigate("fishDetail/$fishId")
             }
             var currentPopup by remember { mutableStateOf(1) }
-            if (tutorialmode && tutorialState) {
+            var tutorialmode by remember { mutableStateOf(tutorialmode) }
+            var completedTutorial by remember { mutableStateOf(false) }
+
+            if (completedTutorial){
+                TutorialPopup(
+                    content = {
+                        Column {
+                            Text(stringResource(R.string.end_tutorial))
+                        }
+                    },
+                    onClose = {
+                        tutorialState = false
+                        completedTutorial = false
+                        tutorialmode = false
+                    }
+                )
+            }
+
+            if (tutorialmode && tutorialState && !completedTutorial) {
                 when(currentState) {
                     -1 -> when (currentPopup) {
                         1 -> {
@@ -746,37 +763,53 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
                         }
                     }
                     0 -> {
-                        TutorialPopup(
-                            content = {
-                                Column {
-                                    Text(stringResource(R.string.cast_fishing_rod))
-                                    /*
-                                    Image(
-                                        painter = painterResource(id = R.drawable.cast_draw), // Replace with your image resource
-                                        contentDescription = "Cast Tutorial",
-                                        modifier = Modifier.fillMaxWidth(),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                    */
-                                    val imageLoader = ImageLoader.Builder(context)
-                                        .components {
-                                            if (SDK_INT >= 28) {
-                                                add(ImageDecoderDecoder.Factory())
-                                            } else {
-                                                add(GifDecoder.Factory())
-                                            }
-                                        }
-                                        .build()
-                                    GifImage(imagename = R.drawable.resource_throw)
+                        if (completedTutorial){
+                            TutorialPopup(
+                                content = {
+                                    Column {
+                                        Text(stringResource(R.string.end_tutorial))
+                                    }
+                                },
+                                onClose = {
+                                    tutorialState = false
+                                    completedTutorial = false
+                                    tutorialmode = false
                                 }
-                            },
-                            onClose = {
-                                tutorialState = false
-                            }
-                        )
+                            )
+
+                        }else {
+                            TutorialPopup(
+                                content = {
+                                    Column {
+                                        Text(stringResource(R.string.cast_fishing_rod))
+                                        /*
+                                        Image(
+                                            painter = painterResource(id = R.drawable.cast_draw), // Replace with your image resource
+                                            contentDescription = "Cast Tutorial",
+                                            modifier = Modifier.fillMaxWidth(),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                        */
+                                        val imageLoader = ImageLoader.Builder(context)
+                                            .components {
+                                                if (SDK_INT >= 28) {
+                                                    add(ImageDecoderDecoder.Factory())
+                                                } else {
+                                                    add(GifDecoder.Factory())
+                                                }
+                                            }
+                                            .build()
+                                        GifImage(imagename = R.drawable.resource_throw)
+                                    }
+                                },
+                                onClose = {
+                                    tutorialState = false
+                                }
+                            )
+                        }
                     }
                     1 -> {
-                        null
+
                     }
                     2 -> {
                         TutorialPopup(
@@ -809,6 +842,8 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
                             },
                             onClose = {
                                 tutorialState = false
+                                completedTutorial = true
+                                //tutorialmode = false
                             }
                         )
                     }
