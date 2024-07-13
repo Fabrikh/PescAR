@@ -910,6 +910,28 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
             }
 
 
+            class QuarterCircleLeftShape : Shape {
+                override fun createOutline(
+                    size: androidx.compose.ui.geometry.Size,
+                    layoutDirection: androidx.compose.ui.unit.LayoutDirection,
+                    density: Density
+                ): Outline {
+                    val path = androidx.compose.ui.graphics.Path().apply {
+
+                        //moveTo(0f, size.height)
+                        arcTo(
+                            rect = Rect(-size.width, 0f, size.width, size.height * 2),
+                            startAngleDegrees = -90f,
+                            sweepAngleDegrees = 90f,
+                            forceMoveTo = false
+                        )
+                        lineTo(0f, size.height)
+
+                        close()
+                    }
+                    return Outline.Generic(path)
+                }
+            }
 
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -923,16 +945,36 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
 
                     navController.navigate("showcase")
                 },
-                    modifier = Modifier.width(180.dp),
+                    modifier = Modifier.width(130.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255),
                         contentColor = Color.White),
-                    border = BorderStroke(2.dp,Color(22, 89, 112, 120))
+                    border = BorderStroke(2.dp,Color(22, 89, 112, 120)),
+                    shape = QuarterCircleLeftShape()
                 ) {
-                    Text("MY COLLECTION",fontWeight = FontWeight.Bold)
+                    Column(
+                        modifier = Modifier.offset(x= (-10).dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(
+                                id = mContext.resources.getIdentifier(
+                                    "fish_tank",
+                                    "drawable",
+                                    mContext.packageName
+                                )
+                            ),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .aspectRatio(1f), // Mantieni l'aspect ratio dell'immagine
+                            contentScale = ContentScale.Fit
+
+                        )
+                        Text("MY COLLECTION", fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                    }
                 }
             }
 
-            class QuarterCircleShape : Shape {
+            class QuarterCircleRightShape : Shape {
                 override fun createOutline(
                     size: androidx.compose.ui.geometry.Size,
                     layoutDirection: androidx.compose.ui.unit.LayoutDirection,
@@ -966,7 +1008,7 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
                     colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255),
                         contentColor = Color.White),
                     border = BorderStroke(2.dp,Color(22, 89, 112, 120)),
-                    shape = QuarterCircleShape()
+                    shape = QuarterCircleRightShape()
                 ) {
                     Column(
                         modifier = Modifier,
@@ -1004,6 +1046,132 @@ fun ARBox(tutorialmode: Boolean, retroViewModel: RetroViewModel, navController: 
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true)
+@Composable
+fun PreviewTest2() {
+
+    var mContext = LocalContext.current
+    class QuarterCircleShape : Shape {
+        override fun createOutline(
+            size: androidx.compose.ui.geometry.Size,
+            layoutDirection: androidx.compose.ui.unit.LayoutDirection,
+            density: Density
+        ): Outline {
+            val path = androidx.compose.ui.graphics.Path().apply {
+                moveTo(0f, size.height)
+                arcTo(
+                    rect = Rect(0f, 0f, size.width * 2, size.height * 2),
+                    startAngleDegrees = 180f,
+                    sweepAngleDegrees = 90f,
+                    forceMoveTo = false
+                )
+                lineTo(size.width, size.height)
+
+                close()
+            }
+            return Outline.Generic(path)
+        }
+    }
+
+    class QuarterCircleLeftShape : Shape {
+        override fun createOutline(
+            size: androidx.compose.ui.geometry.Size,
+            layoutDirection: androidx.compose.ui.unit.LayoutDirection,
+            density: Density
+        ): Outline {
+            val path = androidx.compose.ui.graphics.Path().apply {
+
+                //moveTo(0f, size.height)
+                arcTo(
+                    rect = Rect(-size.width, 0f, size.width, size.height * 2),
+                    startAngleDegrees = -90f,
+                    sweepAngleDegrees = 90f,
+                    forceMoveTo = false
+                )
+                lineTo(0f, size.height)
+
+                close()
+            }
+            return Outline.Generic(path)
+        }
+    }
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomStart,
+    ) {
+        ElevatedButton(onClick = {
+
+        },
+            modifier = Modifier.width(130.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255),
+                contentColor = Color.White),
+            border = BorderStroke(2.dp,Color(22, 89, 112, 120)),
+            shape = QuarterCircleLeftShape()
+        ) {
+            Column(
+                modifier = Modifier.offset(x= (-10).dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = painterResource(
+                        id = mContext.resources.getIdentifier(
+                            "fish_tank",
+                            "drawable",
+                            mContext.packageName
+                        )
+                    ),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .aspectRatio(1f), // Mantieni l'aspect ratio dell'immagine
+                    contentScale = ContentScale.Fit
+
+                )
+                Text("MY COLLECTION", fontWeight = FontWeight.Bold, fontSize = 10.sp)
+            }
+        }
+    }
+
+
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomEnd,
+    ) {
+        ElevatedButton(onClick = {
+
+        },
+            modifier = Modifier.width(130.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(31, 111, 139, 255),
+                contentColor = Color.White),
+            border = BorderStroke(2.dp,Color(22, 89, 112, 120)),
+            shape = QuarterCircleShape()
+        ) {
+            Column(
+                modifier = Modifier,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = painterResource(
+                        id = mContext.resources.getIdentifier(
+                            "lure" +
+                                    FishPreferences.getLure(mContext).toString(),
+                            "drawable",
+                            mContext.packageName
+                        )
+                    ),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .aspectRatio(1f), // Mantieni l'aspect ratio dell'immagine
+                    contentScale = ContentScale.Fit
+
+                )
+                Text("LURES", fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
 
 
 
